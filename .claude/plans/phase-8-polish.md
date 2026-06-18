@@ -21,16 +21,16 @@ Ship-ready: a curated public API, documentation, examples, and CI.
 - `github/` — a small real SDK (`GithubConnector` + a couple requests + a DTO) used in the smoke test.
 
 ### CI (`.github/workflows/ci.yml`)
-- matrix Node 18/20/22: `npm ci`, `npm run typecheck`, `npm run build`, `npm test`.
+- matrix Node 22/24, using `pnpm/action-setup` + `actions/setup-node` (cache: pnpm): `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test`.
 
 ### Release prep
-- `LICENSE` (MIT, mirror Saloon), `package.json` metadata (repository, keywords, description), `.npmignore`/`files` correct (ship `dist` only), `prepublishOnly: npm run build`.
+- `LICENSE` (MIT, mirror Saloon), `package.json` metadata (repository, keywords, description), `files` correct (ship `dist` only), `prepublishOnly: pnpm build`.
 
 ## Done criteria
-- `npm run typecheck && npm run build && npm test` green on the matrix.
+- `pnpm lint && pnpm typecheck && pnpm build && pnpm test` green on the matrix.
 - README quickstart copy-pastes and runs.
 - Tree-shaking probe confirms unused subsystems are dropped.
-- Package is `npm pack`-clean (only `dist` + metadata shipped).
+- Package is `pnpm pack`-clean (only `dist` + metadata shipped).
 
 ## Reference
 - `saloon/composer.json` (keywords/metadata parity), `saloon/LICENSE`

@@ -10,7 +10,7 @@ coverage/
 
 # Logs
 *.log
-npm-debug.log*
+pnpm-debug.log*
 
 # Editor / OS
 .DS_Store

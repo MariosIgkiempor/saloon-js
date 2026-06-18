@@ -3,16 +3,26 @@
 > **Ownership:** You are doing the scaffolding/deps setup yourself. This file documents the agreed setup for reference, then defines the first code primitives (`enums.ts`, `ArrayStore`, `IntegerStore`) which I implement.
 
 ## Goal
-A buildable, testable TS package at the repo root with the two foundational repositories ported. After this phase: `npm run typecheck`, `npm run build`, and `npm test` all pass, and the stores are unit-tested.
+A buildable, testable TS package at the repo root with the two foundational repositories ported. After this phase: `pnpm typecheck`, `pnpm build`, `pnpm lint`, and `pnpm test` all pass, and the stores are unit-tested.
+
+## House rules (see root `CLAUDE.md`)
+- **pnpm** is the only package manager. **nvm** pins Node via `.nvmrc` (24). **Biome** does lint+format (no ESLint/Prettier).
 
 ## Scaffolding (you run these)
 ```bash
 cd /Users/mario/Programming/personal/saloon-js
-npm init -y
-npm pkg set type=module name=saloon-js engines.node=">=18" sideEffects=false
-npm pkg set main=./dist/index.cjs module=./dist/index.js types=./dist/index.d.ts
-npm pkg set scripts.build=tsup scripts.typecheck="tsc --noEmit" scripts.test="vitest run" scripts.test:watch=vitest
-npm install -D typescript tsup vitest @types/node
+nvm use                       # picks up .nvmrc (24)
+corepack enable               # makes pnpm available/pinned
+pnpm init
+pnpm pkg set type=module name=saloon-js engines.node=">=22" sideEffects=false
+pnpm pkg set packageManager="pnpm@9.15.0"   # pin a current pnpm; corepack honors it
+pnpm pkg set main=./dist/index.cjs module=./dist/index.js types=./dist/index.d.ts
+pnpm pkg set scripts.build=tsdown \
+  scripts.typecheck="tsc --noEmit" \
+  scripts.test="vitest run" scripts.test:watch=vitest \
+  scripts.lint="biome check ." scripts.lint:fix="biome check --write ." \
+  scripts.format="biome format --write ."
+pnpm add -D typescript tsdown vitest @types/node @biomejs/biome
 ```
 Add to `package.json` manually:
 ```jsonc
@@ -22,9 +32,11 @@ Add to `package.json` manually:
 
 `tsconfig.json`: target ES2022, module ESNext, moduleResolution Bundler, lib `["ES2022","DOM"]`, strict, noUncheckedIndexedAccess, verbatimModuleSyntax, declaration, skipLibCheck, esModuleInterop, outDir dist. `include: ["src"]`, `exclude: ["node_modules","dist","saloon"]`.
 
-`tsup.config.ts`: entry `src/index.ts`, format `['esm','cjs']`, dts true, treeshake true, clean true, target node18.
+`tsdown.config.ts`: entry `src/index.ts`, format `['esm','cjs']`, dts true, treeshake true, clean true, target node22. (Config via tsdown's `defineConfig`.)
 
 `vitest.config.ts`: `test.include: ['tests/**/*.test.ts']`, environment node.
+
+`biome.json`: enable formatter + linter for `src`/`tests`; ignore `dist`, `saloon`, `node_modules`. Recommended rules on; 2-space indent, single quotes.
 
 ## Code primitives (I implement)
 
@@ -56,8 +68,8 @@ Port of `IntegerStore.php`. Holds `number | null`.
 - `integerStore.test.ts`: null default empty; set/get; `0` treated as empty (match PHP `empty()`); positive value not empty.
 
 ## Done criteria
-- `npm run typecheck` clean, `npm run build` emits `dist/{index.js,index.cjs,index.d.ts}`.
-- `npm test` green for both store specs.
+- `pnpm typecheck` clean, `pnpm lint` clean, `pnpm build` emits `dist/{index.js,index.cjs,index.d.ts}`.
+- `pnpm test` green for both store specs.
 - `src/index.ts` exports `Method`, `PipeOrder`, `ArrayStore`, `IntegerStore`.
 
 ## Reference
