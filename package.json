@@ -1,14 +1,14 @@
 {
   "name": "saloon-js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Build beautiful API integrations and SDKs with Saloon — a TypeScript port of SaloonPHP",
   "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "types": { "import": "./dist/index.d.mts", "require": "./dist/index.d.cts" },
+      "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     }
   },
