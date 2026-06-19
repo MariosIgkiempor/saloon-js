@@ -1,7 +1,7 @@
 {
   "name": "saloon-js",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Build beautiful API integrations and SDKs with Saloon — a TypeScript port of SaloonPHP",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,11 +22,26 @@
     "test:lint": "biome check .",
     "test:everything": "pnpm test:unit && pnpm test:lint && pnpm typecheck",
     "lint:fix": "biome check . --write",
-    "build": "tsdown"
+    "build": "tsdown",
+    "prepublishOnly": "pnpm build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "saloon",
+    "sdk",
+    "api",
+    "api-integrations",
+    "http-client"
+  ],
+  "author": "Mario Igkiempor",
+  "license": "MIT",
+  "homepage": "https://github.com/MariosIgkiempor/saloon-js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MariosIgkiempor/saloon-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MariosIgkiempor/saloon-js/issues"
+  },
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
