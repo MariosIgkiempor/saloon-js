@@ -6,7 +6,7 @@ Feature parity capstone: OAuth2 Authorization Code + Client Credentials grants o
 ## Files (`src/oauth2/`)
 
 ### `OAuthConfig.ts`
-Port of `saloon/src/Helpers/OAuth2/OAuthConfig.php`. Fluent builder + getters:
+Port of `../saloon/src/Helpers/OAuth2/OAuthConfig.php`. Fluent builder + getters:
 - `setClientId/setClientSecret/setRedirectUri`
 - `setAuthorizeEndpoint` (default `authorize`), `setTokenEndpoint` (`token`), `setUserEndpoint` (`user`)
 - `setDefaultScopes(string[])`, `setScopeSeparator(' ')`
@@ -56,8 +56,8 @@ Since TS has no traits, expose these as **mixins** (`AuthorizationCodeGrant(Base
 - DTO generics flow from request → typed Response.
 
 ## Reference
-- `saloon/src/Traits/OAuth2/{AuthorizationCodeGrant,ClientCredentialsGrant,ClientCredentialsBasicAuthGrant,HasOAuthConfig}.php`
-- `saloon/src/Helpers/OAuth2/OAuthConfig.php`
-- `saloon/src/Http/OAuth2/*.php`
-- `saloon/src/Http/Auth/AccessTokenAuthenticator.php`
-- `saloon/src/Traits/Responses/CreatesDtoFromResponse.php`
+- `../saloon/src/Traits/OAuth2/{AuthorizationCodeGrant,ClientCredentialsGrant,ClientCredentialsBasicAuthGrant,HasOAuthConfig}.php`
+- `../saloon/src/Helpers/OAuth2/OAuthConfig.php`
+- `../saloon/src/Http/OAuth2/*.php`
+- `../saloon/src/Http/Auth/AccessTokenAuthenticator.php`
+- `../saloon/src/Traits/Responses/CreatesDtoFromResponse.php`

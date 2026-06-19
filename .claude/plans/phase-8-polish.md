@@ -33,5 +33,5 @@ Ship-ready: a curated public API, documentation, examples, and CI.
 - Package is `pnpm pack`-clean (only `dist` + metadata shipped).
 
 ## Reference
-- `saloon/composer.json` (keywords/metadata parity), `saloon/LICENSE`
-- `saloon/README.md` (doc structure inspiration)
+- `../saloon/composer.json` (keywords/metadata parity), `../saloon/LICENSE`
+- `../saloon/README.md` (doc structure inspiration)

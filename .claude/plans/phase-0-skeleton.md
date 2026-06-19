@@ -30,7 +30,7 @@ Add to `package.json` manually:
 "files": ["dist"]
 ```
 
-`tsconfig.json`: target ES2022, module ESNext, moduleResolution Bundler, lib `["ES2022","DOM"]`, strict, noUncheckedIndexedAccess, verbatimModuleSyntax, declaration, skipLibCheck, esModuleInterop, outDir dist. `include: ["src"]`, `exclude: ["node_modules","dist","saloon"]`.
+`tsconfig.json`: target ES2022, module ESNext, moduleResolution Bundler, lib `["ES2022","DOM"]`, strict, noUncheckedIndexedAccess, verbatimModuleSyntax, declaration, skipLibCheck, esModuleInterop, outDir dist. `include: ["src"]`, `exclude: ["node_modules","dist"]`.
 
 `tsdown.config.ts`: entry `src/index.ts`, format `['esm','cjs']`, dts true, treeshake true, clean true, target node22. (Config via tsdown's `defineConfig`.)
 
@@ -51,7 +51,7 @@ export enum PipeOrder { First = 'first', Last = 'last' }
 ```
 
 ### `src/repositories/ArrayStore.ts`
-Port of `saloon/src/Repositories/ArrayStore.php`. Backing `Record<string, unknown>` (generic `<T = unknown>`).
+Port of `../saloon/src/Repositories/ArrayStore.php`. Backing `Record<string, unknown>` (generic `<T = unknown>`).
 - `constructor(data?: Record<string, T>)`
 - `all(): Record<string, T>`
 - `get(key, default?)`, `set(data)`, `merge(...arrays)` (later wins, like PHP `array_merge`)
@@ -73,5 +73,5 @@ Port of `IntegerStore.php`. Holds `number | null`.
 - `src/index.ts` exports `Method`, `PipeOrder`, `ArrayStore`, `IntegerStore`.
 
 ## Reference
-- `saloon/src/Repositories/ArrayStore.php`, `IntegerStore.php`
-- `saloon/src/Enums/Method.php`, `saloon/src/Enums/PipeOrder.php`
+- `../saloon/src/Repositories/ArrayStore.php`, `IntegerStore.php`
+- `../saloon/src/Enums/Method.php`, `../saloon/src/Enums/PipeOrder.php`

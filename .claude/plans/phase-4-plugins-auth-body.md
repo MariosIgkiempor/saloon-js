@@ -50,7 +50,7 @@ Fill out the developer-facing surface: the built-in plugins, all authenticators,
 - Response reading API fully specced + green.
 
 ## Reference
-- `saloon/src/Traits/Plugins/{AcceptsJson,HasTimeout,AlwaysThrowOnErrors}.php`
-- `saloon/src/Http/Auth/*.php`
-- `saloon/src/Repositories/Body/*.php`, `saloon/src/Data/MultipartValue.php`
-- `saloon/src/Http/Response.php`
+- `../saloon/src/Traits/Plugins/{AcceptsJson,HasTimeout,AlwaysThrowOnErrors}.php`
+- `../saloon/src/Http/Auth/*.php`
+- `../saloon/src/Repositories/Body/*.php`, `../saloon/src/Data/MultipartValue.php`
+- `../saloon/src/Http/Response.php`

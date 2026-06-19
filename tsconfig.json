@@ -27,5 +27,5 @@
     "lib": ["es2022", "dom"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "saloon"]
+  "exclude": ["node_modules", "dist"]
 }

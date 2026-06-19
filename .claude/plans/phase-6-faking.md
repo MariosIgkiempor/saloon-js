@@ -6,7 +6,7 @@ First-class testing support: `MockClient`, `MockResponse`/`FakeResponse`, reques
 ## Files (`src/faking/`)
 
 ### `FakeResponse.ts` / `MockResponse.ts`
-Port of `saloon/src/Http/Faking/{FakeResponse,MockResponse}.php`.
+Port of `../saloon/src/Http/Faking/{FakeResponse,MockResponse}.php`.
 - `MockResponse.make(body = {}, status = 200, headers = {})` — body array → JSON repo; string → string repo.
 - `body(): BodyRepository`, `status(): number`, `headers(): ArrayStore`
 - `throw(errorOrFactory)` → marks the fake to produce an exception; `getException(pending)`
@@ -14,7 +14,7 @@ Port of `saloon/src/Http/Faking/{FakeResponse,MockResponse}.php`.
 - `toResponse(pending)` — build a real `Response` from the fake (construct a `globalThis.Response` and pass through `Response.fromFetchResponse`, marking `isMocked = true`).
 
 ### `MockClient.ts`
-Port of `saloon/src/Http/Faking/MockClient.php`. Matching layers in priority order:
+Port of `../saloon/src/Http/Faking/MockClient.php`. Matching layers in priority order:
 1. per-request: key = Request **constructor reference**, `request.constructor === key` (or `instanceof`)
 2. per-connector: key = Connector constructor reference
 3. URL pattern: string key matched against the pending URL (support `*` wildcard like PHP)
@@ -32,7 +32,7 @@ Port of `saloon/src/Http/Faking/MockClient.php`. Matching layers in priority ord
 Replaces the Phase 3 stub. If a mock client is present, `guessNextResponse(pending)` → resolve `Fixture` (load or, in record mode, fall through) → set `pending.setFakeResponse(...)`. Connector's `createFakeResponse(pending)` turns it into a `Response` and the mock client records it.
 
 ### `Fixture.ts`
-Port of `saloon/src/Http/Faking/Fixture.php`.
+Port of `../saloon/src/Http/Faking/Fixture.php`.
 - `constructor(name, storage?, context?)`
 - `getFixturePath()` — sanitize name (alphanumeric + `-_/`), prevent path traversal; default dir e.g. `tests/Fixtures/saloon`
 - `getMockResponse()` — load from disk or null
@@ -55,6 +55,6 @@ On response, if the pending request used a fixture in record mode and none exist
 - Mocked responses flagged; recorded history accurate.
 
 ## Reference
-- `saloon/src/Http/Faking/{MockClient,FakeResponse,MockResponse,Fixture}.php`
-- `saloon/src/Http/Middleware/DetermineMockResponse.php`
-- `saloon/src/Data/RecordedResponse.php`
+- `../saloon/src/Http/Faking/{MockClient,FakeResponse,MockResponse,Fixture}.php`
+- `../saloon/src/Http/Middleware/DetermineMockResponse.php`
+- `../saloon/src/Data/RecordedResponse.php`

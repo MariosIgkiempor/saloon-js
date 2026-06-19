@@ -1,6 +1,6 @@
 # saloon-js — project house rules
 
-A TypeScript port of [SaloonPHP](https://github.com/saloonphp/saloon). The PHP source lives in the `saloon/` git submodule and is the reference for every port.
+A TypeScript port of [SaloonPHP](https://github.com/saloonphp/saloon). The PHP source lives in a sibling clone at `../saloon` (a standalone checkout, not a git submodule of this repo) and is the reference for every port.
 
 ## Toolchain
 - **Package manager: pnpm only.** Never run `npm` or `yarn`. Use `pnpm install`, `pnpm add -D <pkg>`, `pnpm <script>`. The `packageManager` field in `package.json` pins the pnpm version (corepack-compatible — run `corepack enable` once).
@@ -14,7 +14,7 @@ A TypeScript port of [SaloonPHP](https://github.com/saloonphp/saloon). The PHP s
 
 ## Conventions
 - **TypeScript is strict.** `noUncheckedIndexedAccess` and `verbatimModuleSyntax` are on. No `any` escape hatches without a comment justifying it.
-- **Porting discipline.** Each ported module names its PHP source in a header comment (e.g. `// Port of saloon/src/Repositories/ArrayStore.php`). Preserve behavior — including quirks (e.g. PHP `empty()` semantics where 0 and null are both "empty").
+- **Porting discipline.** Each ported module names its PHP source in a header comment (e.g. `// Port of ../saloon/src/Repositories/ArrayStore.php`). Preserve behavior — including quirks (e.g. PHP `empty()` semantics where 0 and null are both "empty").
 - **Import alias `@/` → `src/`.** Prefer `@/repositories/ArrayStore` over deep relative paths. No file extension needed (`moduleResolution: Bundler`). Wired in `tsconfig.json` (paths), `tsdown.config.ts` (build), and `vitest.config.ts` (tests).
 - **Commit `pnpm-lock.yaml`.** Do not ignore it.
 

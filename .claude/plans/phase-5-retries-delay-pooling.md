@@ -6,7 +6,7 @@ Resilience + concurrency. Full retry loop in `send()`, the delay middleware, and
 ## Files
 
 ### Retry config (mix into Connector + Request)
-Port of `saloon/src/Traits/RequestProperties/HasTries.php`. Optional fields on both: `tries?`, `retryInterval?` (ms), `useExponentialBackoff?`, `throwOnMaxTries?`. Plus hook `handleRetry(exception): boolean | Promise<boolean>` (default true). Request values override connector values.
+Port of `../saloon/src/Traits/RequestProperties/HasTries.php`. Optional fields on both: `tries?`, `retryInterval?` (ms), `useExponentialBackoff?`, `throwOnMaxTries?`. Plus hook `handleRetry(exception): boolean | Promise<boolean>` (default true). Request values override connector values.
 
 ### `src/http/Connector.ts` — full `send()` retry loop
 Replace Phase 3 simple send with the async retry loop (port of `SendsRequests::send`):
@@ -36,7 +36,7 @@ for (let attempt = 1; attempt <= maxTries; attempt++) {
 Registered last in the request pipeline (Phase 3 left it a no-op). Now: if `pending.delay` not empty, `await sleep(pending.delay.get())`.
 
 ### `src/http/Pool.ts`
-Port of `saloon/src/Http/Pool.php` semantics with a bounded worker loop (no Guzzle EachPromise).
+Port of `../saloon/src/Http/Pool.php` semantics with a bounded worker loop (no Guzzle EachPromise).
 - `pool({ requests, concurrency=5, onResponse?, onError? })` on Connector returns a `Pool`.
 - `requests`: `Iterable<Request> | AsyncIterable<Request> | (connector) => Iterable<Request>` — pull lazily so middleware runs at send time.
 - `Pool.send(): Promise<void>` — N workers pull from a shared iterator, each runs `connector.send(req)`, dispatching `onResponse(res, key)` / `onError(reason, key)`. `concurrency` may be a number or `() => number`.
@@ -53,6 +53,6 @@ Port of `saloon/src/Http/Pool.php` semantics with a bounded worker loop (no Guzz
 - Pool respects concurrency bound (verified by max-in-flight counter) and handles both success/error per item.
 
 ## Reference
-- `saloon/src/Traits/Connector/SendsRequests.php`, `saloon/src/Traits/RequestProperties/HasTries.php`
-- `saloon/src/Http/Middleware/DelayMiddleware.php`
-- `saloon/src/Http/Pool.php`
+- `../saloon/src/Traits/Connector/SendsRequests.php`, `../saloon/src/Traits/RequestProperties/HasTries.php`
+- `../saloon/src/Http/Middleware/DelayMiddleware.php`
+- `../saloon/src/Http/Pool.php`

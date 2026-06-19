@@ -37,7 +37,7 @@ FatalRequestException (extends SaloonException)  // no response; carries pending
 - `constructor(cause: Error, pendingRequest: PendingRequest)` — store `this.pendingRequest`, set `cause`.
 
 ### `requestExceptionHelper.ts`
-Port of `saloon/src/Helpers/RequestExceptionHelper.php`.
+Port of `../saloon/src/Helpers/RequestExceptionHelper.php`.
 ```ts
 export function createRequestException(response: Response, cause?: unknown): RequestException
 ```
@@ -53,7 +53,7 @@ Map exact statuses (401/402/403/404/405/408/422/429/500/503/504) → specific cl
 - No core code throws these yet (only constructed/returned) — verified by grep that only `.throw()`/sender wiring (later phases) references throwing.
 
 ## Reference
-- `saloon/src/Exceptions/Request/RequestException.php`, `ClientException.php`, `ServerException.php`
-- `saloon/src/Exceptions/Request/Statuses/*.php`
-- `saloon/src/Exceptions/FatalRequestException.php`, `SaloonException.php`
-- `saloon/src/Helpers/RequestExceptionHelper.php`
+- `../saloon/src/Exceptions/Request/RequestException.php`, `ClientException.php`, `ServerException.php`
+- `../saloon/src/Exceptions/Request/Statuses/*.php`
+- `../saloon/src/Exceptions/FatalRequestException.php`, `SaloonException.php`
+- `../saloon/src/Helpers/RequestExceptionHelper.php`

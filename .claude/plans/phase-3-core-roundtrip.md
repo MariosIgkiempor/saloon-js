@@ -25,7 +25,7 @@ A real HTTP request works end-to-end: instantiate a connector + request, `await 
 - DTO hook: `createDtoFromResponse(response): TDto | undefined` (default undefined)
 
 ### `src/http/PendingRequest.ts`
-Mirror `saloon/src/Http/PendingRequest.php` constructor pipeline. Constructor takes `(connector, request, mockClient?)` and runs **synchronously** up to where async is needed; but since taps + pipeline can be async, prefer a `static async create(connector, request, mockClient?)` factory that does:
+Mirror `../saloon/src/Http/PendingRequest.php` constructor pipeline. Constructor takes `(connector, request, mockClient?)` and runs **synchronously** up to where async is needed; but since taps + pipeline can be async, prefer a `static async create(connector, request, mockClient?)` factory that does:
 1. `this.url = joinUrl(connector.resolveBaseUrl(), request.resolveEndpoint(), allowOverride)`
 2. `this.method = request.method`
 3. resolve authenticator: `request.getAuthenticator() ?? connector.getAuthenticator()`
@@ -86,7 +86,7 @@ Global config singleton (lazy, no module-init side effects): `globalMiddleware()
 - typecheck + build clean.
 
 ## Reference
-- `saloon/src/Http/PendingRequest.php` (the heart), `Connector.php`, `Request.php`, `Response.php`
-- `saloon/src/Http/PendingRequest/*.php` (tap implementations)
-- `saloon/src/Http/Senders/GuzzleSender.php`
-- `saloon/src/Helpers/URLHelper.php`
+- `../saloon/src/Http/PendingRequest.php` (the heart), `Connector.php`, `Request.php`, `Response.php`
+- `../saloon/src/Http/PendingRequest/*.php` (tap implementations)
+- `../saloon/src/Http/Senders/GuzzleSender.php`
+- `../saloon/src/Helpers/URLHelper.php`

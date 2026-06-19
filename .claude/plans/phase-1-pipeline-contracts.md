@@ -6,7 +6,7 @@ The middleware pipeline machinery and every core interface. Nothing wires togeth
 ## Files
 
 ### `src/helpers/MiddlewarePipeline.ts`
-Port of `saloon/src/Helpers/MiddlewarePipeline.php`. Three internal ordered lists (request / response / fatal). Each pipe = `{ name?: string, order?: PipeOrder, callable }`.
+Port of `../saloon/src/Helpers/MiddlewarePipeline.php`. Three internal ordered lists (request / response / fatal). Each pipe = `{ name?: string, order?: PipeOrder, callable }`.
 - `onRequest(fn: RequestMiddleware, name?, order?): this`
 - `onResponse(fn: ResponseMiddleware, name?, order?): this`
 - `onFatalException(fn: (e: FatalRequestException) => void, name?, order?): this`
@@ -42,6 +42,6 @@ Port of `saloon/src/Helpers/MiddlewarePipeline.php`. Three internal ordered list
 - Pipeline ordering + async + merge specs green.
 
 ## Reference
-- `saloon/src/Helpers/MiddlewarePipeline.php`, `saloon/src/Helpers/Pipeline.php`
-- `saloon/src/Contracts/{Sender,Authenticator,RequestMiddleware,ResponseMiddleware}.php`
-- `saloon/src/Contracts/Body/{BodyRepository,MergeableBody}.php`
+- `../saloon/src/Helpers/MiddlewarePipeline.php`, `../saloon/src/Helpers/Pipeline.php`
+- `../saloon/src/Contracts/{Sender,Authenticator,RequestMiddleware,ResponseMiddleware}.php`
+- `../saloon/src/Contracts/Body/{BodyRepository,MergeableBody}.php`

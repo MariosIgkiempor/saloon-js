@@ -1,4 +1,0 @@
-[submodule "saloon"]
-	path = saloon
-	url = git@github.com:saloonphp/saloon.git
-	branch = v4
