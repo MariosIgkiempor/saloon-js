@@ -1,0 +1,23 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      saloon-js:
+        specifier: latest
+        version: 0.1.1
+
+packages:
+
+  saloon-js@0.1.1:
+    resolution: {integrity: sha512-M2AdGy0vMmQ07ggSppus52zYv1c0kIQwFVg2AQigYCV1xqfCzO2VFkNmbqdwKy8O0hFXW+rptbHXnIk5fFXSJw==}
+    engines: {node: '>=22'}
+
+snapshots:
+
+  saloon-js@0.1.1: {}
