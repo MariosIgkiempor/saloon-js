@@ -14,7 +14,8 @@ A TypeScript port of [SaloonPHP](https://github.com/saloonphp/saloon). The PHP s
 
 ## Conventions
 - **TypeScript is strict.** `noUncheckedIndexedAccess` and `verbatimModuleSyntax` are on. No `any` escape hatches without a comment justifying it.
-- **Porting discipline.** Each ported module names its PHP source in a header comment (e.g. `// Port of ../saloon/src/Repositories/ArrayStore.php`). Preserve behavior — including quirks (e.g. PHP `empty()` semantics where 0 and null are both "empty").
+- **Functional API, no classes.** The public API is functional: users author connectors/requests with `defineConnector`/`defineRequest` and invoke behavior with free functions (`send`, `pool`, OAuth functions). No `class … extends Connector`. Internal machinery (stores, pipeline, pending request, response, sender, mock client) uses **factory functions returning objects**, not classes. The **one carve-out** is Error types, which stay `class … extends Error` (a throwable must) but are discriminated via predicate helpers (`isNotFoundError`, …). Full vocabulary + PHP→TS mapping in `.claude/plans/api-style.md`.
+- **Porting discipline.** Each ported module names its PHP source in a header comment (e.g. `// Port of ../saloon/src/Repositories/ArrayStore.php`). Preserve **behavior** — including quirks (e.g. PHP `empty()` semantics where 0 and null are both "empty"). The **structure** intentionally diverges from PHP's class/trait design to the functional API above; the port is behavioral, not structural.
 - **Import alias `@/` → `src/`.** Prefer `@/repositories/ArrayStore` over deep relative paths. No file extension needed (`moduleResolution: Bundler`). Wired in `tsconfig.json` (paths), `tsdown.config.ts` (build), and `vitest.config.ts` (tests).
 - **Commit `pnpm-lock.yaml`.** Do not ignore it.
 
