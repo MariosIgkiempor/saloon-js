@@ -1,5 +1,13 @@
 # Slice 3 — Error model & full response reading
 
+> **⚠️ Revised direction (PR #4):** the error model is now **return-based**, built
+> on the internal `Result<T, E>` primitive (`src/result.ts`). `send` throws **only**
+> the network `FatalRequestError`; nothing else throws. The thrown status-class
+> hierarchy + per-status predicates (`isNotFoundError`, `createRequestError`, …)
+> described below are **superseded** — see the "Error handling" section of
+> `api-style.md`. When this slice is implemented, rework it around `Result` +
+> `response.failed()`/inspection rather than the throw-based hierarchy below.
+
 > **API style:** functional, no classes — see `api-style.md`. **Errors are the
 > deliberate carve-out**: real `class … extends Error`, but constructed by a
 > factory and discriminated by **predicate helpers** as the primary API. Users

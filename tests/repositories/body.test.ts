@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { Method } from '@/enums';
-import { BodyException, isBodyException } from '@/errors';
 import { defineConnector } from '@/http/defineConnector';
 import { defineRequest } from '@/http/defineRequest';
 import { createPendingRequest } from '@/http/pendingRequest';
@@ -113,7 +112,7 @@ describe('body repositories', () => {
       expect((request.body as ReturnType<typeof jsonBody>).all()).toEqual({ b: 2, c: 3 });
     });
 
-    it('throws BodyException when connector and request body kinds differ', () => {
+    it('request body wins (no throw) when connector and request body kinds differ', () => {
       const connector = defineConnector({ baseUrl: 'https://x', body: jsonBody({ a: 1 }) });
       const request = defineRequest({
         method: Method.POST,
@@ -121,14 +120,9 @@ describe('body repositories', () => {
         body: formBody({ a: '1' }),
       });
 
-      let caught: unknown;
-      try {
-        createPendingRequest(connector, request);
-      } catch (error) {
-        caught = error;
-      }
-      expect(isBodyException(caught)).toBe(true);
-      expect(caught).toBeInstanceOf(BodyException);
+      const body = createPendingRequest(connector, request).getBody();
+      expect(body?.kind).toBe('form');
+      expect(body?.all()).toEqual({ a: '1' });
     });
 
     it('request body wins wholesale for non-mergeable kinds (string)', () => {

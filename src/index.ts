@@ -20,14 +20,7 @@ export type {
   Sender,
 } from '@/contracts';
 export { Method } from '@/enums';
-export {
-  BodyException,
-  FatalRequestError,
-  isBodyException,
-  isFatalRequestError,
-  isSaloonError,
-  SaloonError,
-} from '@/errors';
+export { FatalRequestError, isFatalRequestError, isSaloonError, SaloonError } from '@/errors';
 export { defineConnector } from '@/http/defineConnector';
 export { defineRequest } from '@/http/defineRequest';
 export type { PendingRequest, ResponseFactory } from '@/http/pendingRequest';

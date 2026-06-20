@@ -89,33 +89,36 @@ shape every factory returns. The `connector`/`request` values are typed by
 `Connector` / `Request<TDto>` interfaces (the normalized output of
 `defineConnector`/`defineRequest`).
 
-## The one carve-out: Error types stay `class … extends Error`
+## Error handling: return-based internally, throw only the network error
 
-Errors are the single exception, and deliberately so:
+> **Decision (revised):** errors are modeled as **return values**, not thrown.
+> The library uses a tiny dependency-free `Result<T, E>` (`src/result.ts` —
+> `ok`/`err`/`isOk`/`isErr`) for internal fallible operations. This supersedes the
+> earlier "throw + status-class hierarchy + predicates" design.
 
-- A real throwable **must** `extend Error` to carry a stack/`name`; there is no
-  functional substitute that interops with `try/catch`, `cause`, and tooling.
-- Users never *author* or *subclass* these — they only **catch** them — so they
-  are not part of the authoring surface the decision is about.
+The one deliberate exception:
 
-To keep discrimination functional-friendly, the **primary** API is predicate
-helpers; `instanceof` remains available for those who want it:
+- **`send` throws only the network failure** (`FatalRequestError`). It stays a
+  `class … extends Error` precisely so `await send(...)` rejects and `Promise.all`
+  / `try/catch` behave the way callers expect for a transport failure. This is the
+  **only** error `send` ever throws.
+- **HTTP 4xx/5xx do not throw.** A response with an error status is a *successful*
+  round-trip; it comes back as a `Response` to inspect (`status()`, and the
+  `failed()`/reading surface added in Slice 3). Opt-in helpers may *return* a
+  `Result` for failed statuses; none of this throws.
+- **Misconfiguration is designed away, not thrown.** E.g. a connector/request
+  body-kind mismatch resolves to "request body wins" (the request-wins precedence)
+  rather than throwing.
 
 ```ts
-try { await send(c, r); }
-catch (e) {
-  if (isNotFoundError(e)) { /* 404 */ }
-  else if (isServerError(e)) { /* 5xx */ }
-  else if (isFatalRequestError(e)) { /* transport */ }
-}
+const response = await send(c, r);        // throws only on a network failure
+if (response.failed()) { /* inspect 4xx/5xx — no throw */ }
 ```
 
-Predicates to provide: `isSaloonError`, `isRequestError`, `isFatalRequestError`,
-`isClientError`, `isServerError`, and per-status `isNotFoundError`,
-`isUnauthorizedError`, `isTooManyRequestsError`, … (mirror the status classes).
-Errors are constructed by `createRequestError(response, cause?)` (was
-`RequestExceptionHelper`); the class hierarchy is the implementation detail
-behind the predicates.
+Catching the network error still works via `isFatalRequestError` (and the broader
+`isSaloonError`); `instanceof` remains available. The previously-planned thrown
+status hierarchy (`isNotFoundError`, `createRequestError`, …) is dropped in favor
+of `Result` + response inspection — see `slice-3-errors-response-reading.md`.
 
 ## Immutability & state
 
