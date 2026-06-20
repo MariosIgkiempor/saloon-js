@@ -1,0 +1,11 @@
+{
+  "name": "github-api-example",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-strip-types index.ts"
+  },
+  "dependencies": {
+    "saloon-js": "latest"
+  }
+}

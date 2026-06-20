@@ -1,6 +1,9 @@
 # Phase 0 — Skeleton & primitives
 
-> **Ownership:** You are doing the scaffolding/deps setup yourself. This file documents the agreed setup for reference, then defines the first code primitives (`enums.ts`, `ArrayStore`, `IntegerStore`) which I implement.
+> **API style:** functional, no classes — see `api-style.md`. The stores below
+> are **factory functions returning plain objects**, not classes.
+
+> **Ownership:** You are doing the scaffolding/deps setup yourself. This file documents the agreed setup for reference, then defines the first code primitives (`enums.ts`, `createArrayStore`, `createIntegerStore`) which I implement.
 
 ## Goal
 A buildable, testable TS package at the repo root with the two foundational repositories ported. After this phase: `pnpm typecheck`, `pnpm build`, `pnpm lint`, and `pnpm test` all pass, and the stores are unit-tested.
@@ -50,27 +53,26 @@ export enum Method {
 export enum PipeOrder { First = 'first', Last = 'last' }
 ```
 
-### `src/repositories/ArrayStore.ts`
-Port of `../saloon/src/Repositories/ArrayStore.php`. Backing `Record<string, unknown>` (generic `<T = unknown>`).
-- `constructor(data?: Record<string, T>)`
-- `all(): Record<string, T>`
-- `get(key, default?)`, `set(data)`, `merge(...arrays)` (later wins, like PHP `array_merge`)
-- `add(key, value)`, `remove(key)`, `has(key)`
-- `isEmpty()`, `isNotEmpty()`
-- Header keys are case-insensitive in HTTP; **defer** case-insensitivity to the headers store usage — keep ArrayStore literal here, handle header casing in PendingRequest/FetchSender (note this decision in Phase 3).
+### `src/repositories/arrayStore.ts`
+Port of `../saloon/src/Repositories/ArrayStore.php`, as a factory. Backing `Record<string, unknown>` (generic `<T = unknown>`).
+- `export function createArrayStore<T = unknown>(data?: Record<string, T>): ArrayStore<T>`
+- Returns an object (closure over private backing record) with: `all()`, `get(key, default?)`, `set(data)`, `merge(...arrays)` (later wins, like PHP `array_merge`), `add(key, value)`, `remove(key)`, `has(key)`, `isEmpty()`, `isNotEmpty()`.
+- Export an `ArrayStore<T>` **interface** describing that object shape (used throughout later phases as the store type).
+- Header keys are case-insensitive in HTTP; **defer** case-insensitivity to the headers store usage — keep `createArrayStore` literal here, handle header casing in PendingRequest/FetchSender (note this decision in Phase 3).
 
-### `src/repositories/IntegerStore.ts`
-Port of `IntegerStore.php`. Holds `number | null`.
-- `constructor(value?: number | null)`, `set(value)`, `get()`, `isEmpty()` (null/0 → empty per PHP `empty()`), `isNotEmpty()`.
+### `src/repositories/integerStore.ts`
+Port of `IntegerStore.php`, as a factory. Holds `number | null`.
+- `export function createIntegerStore(value?: number | null): IntegerStore`
+- Object with `set(value)`, `get()`, `isEmpty()` (null/0 → empty per PHP `empty()`), `isNotEmpty()`; plus an `IntegerStore` interface.
 
 ## Tests (`tests/repositories/`)
-- `arrayStore.test.ts`: construction with defaults; `merge` precedence (later overrides); `add`/`remove`/`has`/`get` with default; `isEmpty`/`isNotEmpty`.
+- `arrayStore.test.ts`: factory with defaults; `merge` precedence (later overrides); `add`/`remove`/`has`/`get` with default; `isEmpty`/`isNotEmpty`.
 - `integerStore.test.ts`: null default empty; set/get; `0` treated as empty (match PHP `empty()`); positive value not empty.
 
 ## Done criteria
 - `pnpm typecheck` clean, `pnpm lint` clean, `pnpm build` emits `dist/{index.js,index.cjs,index.d.ts}`.
 - `pnpm test` green for both store specs.
-- `src/index.ts` exports `Method`, `PipeOrder`, `ArrayStore`, `IntegerStore`.
+- `src/index.ts` exports `Method`, `PipeOrder`, `createArrayStore`, `createIntegerStore` (and the `ArrayStore`/`IntegerStore` types).
 
 ## Reference
 - `../saloon/src/Repositories/ArrayStore.php`, `IntegerStore.php`
