@@ -2,7 +2,15 @@
 // `TDto` threads the DTO type through to `response.dto()` (wired in Slice 7); in
 // Slice 1 it is carried but otherwise inert.
 
-import type { HeadersConfig, HeaderValue, QueryConfig, QueryValue } from '@/contracts/Connector';
+import type { BodyRepository } from '@/contracts/BodyRepository';
+import type {
+  ConfigValue,
+  HeadersConfig,
+  HeaderValue,
+  QueryConfig,
+  QueryValue,
+  RequestOptionsConfig,
+} from '@/contracts/Connector';
 import type { Method } from '@/enums';
 import type { ArrayStore } from '@/repositories/arrayStore';
 
@@ -13,6 +21,9 @@ export interface Request<TDto = unknown> {
   endpoint: string | ((request: Request) => string);
   headers: ArrayStore<HeaderValue>;
   query: ArrayStore<QueryValue>;
+  config: ArrayStore<ConfigValue>;
+  // Thunk-or-value, like `endpoint`: resolved per-send in MergeBody.
+  body?: BodyRepository | (() => BodyRepository);
   allowBaseUrlOverride: boolean;
   name?: string;
 }
@@ -24,6 +35,8 @@ export interface RequestConfig<TDto = unknown> {
   endpoint: string | ((request: Request) => string);
   headers?: HeadersConfig;
   query?: QueryConfig;
+  config?: RequestOptionsConfig;
+  body?: BodyRepository | (() => BodyRepository);
   allowBaseUrlOverride?: boolean;
   name?: string;
 }

@@ -1,6 +1,6 @@
 // Port of ../saloon/src/Http/Request.php (the resolve/default surface)
 
-import type { HeaderValue, QueryValue } from '@/contracts/Connector';
+import type { ConfigValue, HeaderValue, QueryValue } from '@/contracts/Connector';
 import type { Request, RequestConfig } from '@/contracts/Request';
 import { createArrayStore } from '@/repositories/arrayStore';
 
@@ -11,6 +11,8 @@ export function defineRequest<TDto = unknown>(config: RequestConfig<TDto>): Requ
     endpoint: config.endpoint,
     headers: createArrayStore<HeaderValue>(config.headers),
     query: createArrayStore<QueryValue>(config.query),
+    config: createArrayStore<ConfigValue>(config.config),
+    body: config.body,
     allowBaseUrlOverride: config.allowBaseUrlOverride ?? false,
     name: config.name,
   };
