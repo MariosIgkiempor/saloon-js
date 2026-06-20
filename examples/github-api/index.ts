@@ -10,22 +10,22 @@
  */
 
 import {
+  authorizationUrl,
   defineConnector,
   defineRequest,
-  send,
-  tokenAuth,
-  Method,
-  authorizationUrl,
+  deserializeAuth,
   exchangeCode,
-  refreshAccessToken,
   hasExpired,
   isRefreshable,
-  serializeAuth,
-  deserializeAuth,
-  withAuth,
-  type Response,
-  type OAuthConfig,
+  Method,
   type OAuthAuthenticator,
+  type OAuthConfig,
+  type Response,
+  refreshAccessToken,
+  send,
+  serializeAuth,
+  tokenAuth,
+  withAuth,
 } from 'saloon-js';
 
 interface Repo {
@@ -82,7 +82,10 @@ const listUserRepos = (
 async function main(): Promise<void> {
   const connector = gitHub(process.env.GITHUB_TOKEN ?? '');
 
-  const response = await send(connector, listUserRepos('saloonphp', { perPage: 5, sort: 'updated' }));
+  const response = await send(
+    connector,
+    listUserRepos('saloonphp', { perPage: 5, sort: 'updated' }),
+  );
 
   if (response.failed()) {
     console.error(`Request failed: HTTP ${response.status()}`);
