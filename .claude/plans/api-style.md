@@ -1,10 +1,8 @@
 # API style — functional, no classes (the cross-cutting decision)
 
-> **Status:** decided. Supersedes the class-based sketch that the earlier phase
-> plans assumed. **Behavior/feature parity with SaloonPHP is unchanged** — only
-> the *shape* of the public API changes. Every phase below references the
-> vocabulary defined here; if a phase still shows `class X extends ...`, this
-> note wins.
+> **Status:** decided. **Behavior/feature parity with SaloonPHP is unchanged** —
+> only the *shape* of the public API changes (functional, not class-based). Every
+> slice (see `slices.md`) references the vocabulary defined here.
 
 ## The decision
 
@@ -68,7 +66,7 @@ OAuth2 token-store flow.
 
 ## Internal machinery is functional too
 
-The internal building blocks the class plans named as classes become
+The internal building blocks that SaloonPHP implements as classes become
 **factory functions returning plain objects** (closures over private state — no
 `class`, no inheritance, methods are object properties). Public method
 ergonomics (`pending.headers.add(...)`, `response.json()`) are preserved.
@@ -129,7 +127,7 @@ behind the predicates.
 - Long-lived auth state (OAuth tokens that refresh) does **not** live on the
   connector value. It lives in an injected **token store**
   (`tokens: { load, save }` on `defineConnector`); `send` reads/refreshes/writes
-  through it. See Phase 7. This is the functional answer to "the class instance
+  through it. See Slice 7. This is the functional answer to "the class instance
   held the token."
 
 ## Naming for diagnostics
@@ -138,4 +136,4 @@ Class names previously gave free labels in stack traces, mock matching, and
 debug output. Replace with an optional `name` field on `defineConnector`/
 `defineRequest` config (used by `MockClient` matching, debugging, and error
 messages). Mock matching by "request type" keys off a request's identity/`name`
-rather than `instanceof` a class (see Phase 6).
+rather than `instanceof` a class (see Slice 6).

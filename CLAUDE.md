@@ -30,4 +30,7 @@ pnpm lint               # biome check
 ```
 
 ## Implementation roadmap
-Phased plans live in `.claude/plans/phase-0-skeleton.md` … `phase-8-polish.md`.
+Plans are organized as **vertical slices** (each ends in a runnable, tested
+request), not horizontal layers. Index: `.claude/plans/slices.md`; slices live in
+`.claude/plans/slice-1-get-roundtrip.md` … `slice-8-polish.md`. Cross-cutting API
+decisions: `.claude/plans/api-style.md`.
