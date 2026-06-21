@@ -20,7 +20,29 @@ export type {
   Sender,
 } from '@/contracts';
 export { Method } from '@/enums';
-export { FatalRequestError, isFatalRequestError, isSaloonError, SaloonError } from '@/errors';
+export {
+  createRequestError,
+  FatalRequestError,
+  isClientError,
+  isFatalRequestError,
+  isForbiddenError,
+  isGatewayTimeoutError,
+  isInternalServerError,
+  isMethodNotAllowedError,
+  isNotFoundError,
+  isPaymentRequiredError,
+  isRequestError,
+  isRequestTimeoutError,
+  isSaloonError,
+  isServerError,
+  isServiceUnavailableError,
+  isTooManyRequestsError,
+  isUnauthorizedError,
+  isUnprocessableEntityError,
+  RequestError,
+  type RequestErrorKind,
+  SaloonError,
+} from '@/errors';
 export { defineConnector } from '@/http/defineConnector';
 export { defineRequest } from '@/http/defineRequest';
 export type { PendingRequest, ResponseFactory } from '@/http/pendingRequest';
@@ -45,3 +67,4 @@ export {
   streamBody,
   stringBody,
 } from '@/repositories/body';
+export { err, isErr, isOk, ok, type Result } from '@/result';
