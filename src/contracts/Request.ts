@@ -15,6 +15,7 @@ import type {
   QueryValue,
   RequestOptionsConfig,
 } from '@/contracts/Connector';
+import type { MockClient } from '@/contracts/MockClient';
 import type { Plugin } from '@/contracts/Plugin';
 import type { Method } from '@/enums';
 import type { ArrayStore } from '@/repositories/arrayStore';
@@ -36,6 +37,7 @@ export interface Request<TDto = unknown> {
   middleware?: MiddlewareRegistrar;
   boot?: BootHook;
   handleFetchRequest?: FetchRequestHook;
+  mockClient?: MockClient;
   allowBaseUrlOverride: boolean;
   name?: string;
 }
@@ -54,6 +56,7 @@ export interface RequestConfig<TDto = unknown> {
   middleware?: MiddlewareRegistrar;
   boot?: BootHook;
   handleFetchRequest?: FetchRequestHook;
+  mockClient?: MockClient;
   allowBaseUrlOverride?: boolean;
   name?: string;
 }

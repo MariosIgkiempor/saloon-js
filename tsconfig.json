@@ -24,7 +24,9 @@
     /* AND if you're building for a library: */
     "declaration": true,
     /* Web platform globals (fetch, Headers, Response, AbortController): */
-    "lib": ["es2022", "dom"]
+    "lib": ["es2022", "dom"],
+    /* Node built-ins for the (Node-only) fixture disk I/O in src/faking. */
+    "types": ["node"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

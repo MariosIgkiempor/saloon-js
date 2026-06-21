@@ -12,20 +12,25 @@ export type {
   ConnectorConfig,
   FakeResponse,
   FetchRequestHook,
+  Fixture,
   HeadersConfig,
   HeaderValue,
   MergeableBody,
   MiddlewareRegistrar,
+  MockClient,
+  MockValue,
   MultipartValue,
   Plugin,
   QueryConfig,
   QueryValue,
+  RecordedResponse,
   Request,
   RequestBody,
   RequestConfig,
   RequestOptionsConfig,
   Response,
   Sender,
+  SentMatcher,
 } from '@/contracts';
 export { Method, PipeOrder } from '@/enums';
 export {
@@ -52,6 +57,17 @@ export {
   SaloonError,
 } from '@/errors';
 export {
+  createMockClient,
+  destroyGlobalMockClient,
+  type FixtureOptions,
+  fixture,
+  getGlobalMockClient,
+  type MockResponse,
+  mockResponse,
+  type RecordedFixture,
+  setGlobalMockClient,
+} from '@/faking';
+export {
   createMiddlewarePipeline,
   type FatalMiddleware,
   type MiddlewarePipeline,
@@ -60,7 +76,7 @@ export {
 } from '@/helpers/middlewarePipeline';
 export { defineConnector } from '@/http/defineConnector';
 export { defineRequest } from '@/http/defineRequest';
-export type { PendingRequest, ResponseFactory } from '@/http/pendingRequest';
+export type { PendingRequest, ResponseFactory, SendOptions } from '@/http/pendingRequest';
 export { send } from '@/http/send';
 export { createFetchSender, fetchSender } from '@/http/senders/fetchSender';
 export {
