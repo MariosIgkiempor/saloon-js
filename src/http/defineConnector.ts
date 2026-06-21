@@ -18,6 +18,11 @@ export function defineConnector(config: ConnectorConfig): Connector {
     query: createArrayStore<QueryValue>(config.query),
     config: createArrayStore<ConfigValue>(config.config),
     body: config.body,
+    auth: config.auth,
+    plugins: config.plugins ?? [],
+    middleware: config.middleware,
+    boot: config.boot,
+    handleFetchRequest: config.handleFetchRequest,
     sender: config.sender ?? getDefaultSender(),
     name: config.name,
   };

@@ -13,6 +13,8 @@ export interface ArrayStore<T = unknown> {
   get(key: string, defaultValue?: T): T | undefined;
   /** Replace every entry. Chainable. */
   set(data: Record<string, T>): ArrayStore<T>;
+  /** Set a single key (later wins on conflict). Chainable. */
+  add(key: string, value: T): ArrayStore<T>;
   /** Merge arrays in, later arrays winning (like PHP `array_merge`). Chainable. */
   merge(...arrays: Record<string, T>[]): ArrayStore<T>;
 }
@@ -25,6 +27,10 @@ export function createArrayStore<T = unknown>(data: Record<string, T> = {}): Arr
     get: (key, defaultValue) => (Object.hasOwn(store, key) ? store[key] : defaultValue),
     set(newData) {
       store = { ...newData };
+      return api;
+    },
+    add(key, value) {
+      store[key] = value;
       return api;
     },
     merge(...arrays) {

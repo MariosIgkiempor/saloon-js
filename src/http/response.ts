@@ -76,6 +76,10 @@ export async function responseFromFetch(
     },
     toResult: (): Result<Response, RequestError> =>
       failed() ? err(createRequestError(response)) : okResult(response),
+    throw(): Response {
+      if (failed()) throw createRequestError(response);
+      return response;
+    },
     getPendingRequest: () => pending,
     getRequest: (): Request => pending.getRequest(),
     getConnector: (): Connector => pending.getConnector(),

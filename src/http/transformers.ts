@@ -2,12 +2,13 @@
 // Each returns a NEW frozen value (never mutates the original) and is generic over
 // `Connector | Request`. The patch wins within the returned value's store, so a
 // transformer applied to the request wins over both connector and request defaults.
-// (`withAuth`/`withMiddleware` arrive in Slice 4 with the fields they operate on.)
 
 import type { BodyRepository } from '@/contracts/BodyRepository';
 import type {
+  AuthValue,
   Connector,
   HeadersConfig,
+  MiddlewareRegistrar,
   QueryConfig,
   RequestOptionsConfig,
 } from '@/contracts/Connector';
@@ -45,4 +46,21 @@ export function withBody<T extends Target>(
   body: BodyRepository | (() => BodyRepository),
 ): T {
   return Object.freeze({ ...target, body }) as unknown as T;
+}
+
+/** Override the authenticator for a single call (beats connector/request auth). */
+export function withAuth<T extends Target>(target: T, auth: AuthValue): T {
+  return Object.freeze({ ...target, auth }) as unknown as T;
+}
+
+/** Register ad-hoc middleware for a single call (composed after any existing). */
+export function withMiddleware<T extends Target>(target: T, middleware: MiddlewareRegistrar): T {
+  const existing = target.middleware;
+  const composed: MiddlewareRegistrar = existing
+    ? (pipeline) => {
+        existing(pipeline);
+        middleware(pipeline);
+      }
+    : middleware;
+  return Object.freeze({ ...target, middleware: composed }) as unknown as T;
 }

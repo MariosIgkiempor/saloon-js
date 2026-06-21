@@ -47,6 +47,12 @@ export interface Response<TDto = unknown> {
    * `err(RequestError)`. The core never throws the `RequestError`.
    */
   toResult(): Result<Response<TDto>, RequestError>;
+  /**
+   * Throw a `RequestError` when `failed()`, otherwise return `this`. The core
+   * never calls this; it is the opt-in escape hatch consumers reach for (and what
+   * the `alwaysThrowOnErrors` plugin wires into the response pipeline).
+   */
+  throw(): Response<TDto>;
 
   getPendingRequest(): PendingRequest;
   getRequest(): Request;
