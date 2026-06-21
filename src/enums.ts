@@ -1,4 +1,4 @@
-// Port of ../saloon/src/Enums/Method.php
+// Port of ../saloon/src/Enums/Method.php + ../saloon/src/Enums/PipeOrder.php
 
 export enum Method {
   GET = 'GET',
@@ -10,4 +10,11 @@ export enum Method {
   OPTIONS = 'OPTIONS',
   CONNECT = 'CONNECT',
   TRACE = 'TRACE',
+}
+
+// Where a middleware pipe is inserted relative to the others (see
+// `helpers/middlewarePipeline`): `First` prepends, `Last`/default appends.
+export enum PipeOrder {
+  First = 'first',
+  Last = 'last',
 }

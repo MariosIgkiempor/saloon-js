@@ -13,6 +13,11 @@ export function defineRequest<TDto = unknown>(config: RequestConfig<TDto>): Requ
     query: createArrayStore<QueryValue>(config.query),
     config: createArrayStore<ConfigValue>(config.config),
     body: config.body,
+    auth: config.auth,
+    plugins: config.plugins ?? [],
+    middleware: config.middleware,
+    boot: config.boot,
+    handleFetchRequest: config.handleFetchRequest,
     allowBaseUrlOverride: config.allowBaseUrlOverride ?? false,
     name: config.name,
   };

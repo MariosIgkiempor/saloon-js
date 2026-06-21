@@ -4,13 +4,18 @@
 
 import type { BodyRepository } from '@/contracts/BodyRepository';
 import type {
+  AuthValue,
+  BootHook,
   ConfigValue,
+  FetchRequestHook,
   HeadersConfig,
   HeaderValue,
+  MiddlewareRegistrar,
   QueryConfig,
   QueryValue,
   RequestOptionsConfig,
 } from '@/contracts/Connector';
+import type { Plugin } from '@/contracts/Plugin';
 import type { Method } from '@/enums';
 import type { ArrayStore } from '@/repositories/arrayStore';
 
@@ -24,6 +29,13 @@ export interface Request<TDto = unknown> {
   config: ArrayStore<ConfigValue>;
   // Thunk-or-value, like `endpoint`: resolved per-send in MergeBody.
   body?: BodyRepository | (() => BodyRepository);
+  // Request auth beats connector auth (see `pendingRequest.getAuthenticator`).
+  auth?: AuthValue;
+  // Normalized to `[]` by `defineRequest`, so the boot tap can iterate freely.
+  plugins: Plugin[];
+  middleware?: MiddlewareRegistrar;
+  boot?: BootHook;
+  handleFetchRequest?: FetchRequestHook;
   allowBaseUrlOverride: boolean;
   name?: string;
 }
@@ -37,6 +49,11 @@ export interface RequestConfig<TDto = unknown> {
   query?: QueryConfig;
   config?: RequestOptionsConfig;
   body?: BodyRepository | (() => BodyRepository);
+  auth?: AuthValue;
+  plugins?: Plugin[];
+  middleware?: MiddlewareRegistrar;
+  boot?: BootHook;
+  handleFetchRequest?: FetchRequestHook;
   allowBaseUrlOverride?: boolean;
   name?: string;
 }

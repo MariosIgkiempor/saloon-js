@@ -1,16 +1,27 @@
-// Port of ../saloon/src/Http/PendingRequest.php (URL/method/header/query/body build)
+// Port of ../saloon/src/Http/PendingRequest.php (URL/method/header/query/body build
+// + the boot/auth/middleware lifecycle).
 //
 // The one intentionally-mutable object: created per `send()`, never shared. Slice 2
-// introduces the explicit tap sequence (`mergeRequestProperties → mergeBody`) that
-// later slices extend with boot/auth/delay; taps mutate the pending request in
-// order before it is materialized into a native fetch request.
+// introduced the explicit tap sequence; Slice 4 extends it to the full lifecycle
+// (boot plugins → merge properties → merge body → authenticate → boot
+// connector/request) and gives the pending request a middleware pipeline. The
+// *async* request pipeline itself is executed by `send` (the async orchestrator),
+// after which the sender — or, from Slice 6, a stashed fake response — produces the
+// Response.
 
+import type { Authenticator } from '@/contracts/Authenticator';
 import type { BodyRepository } from '@/contracts/BodyRepository';
 import type { ConfigValue, Connector, HeaderValue, QueryValue } from '@/contracts/Connector';
+import type { FakeResponse } from '@/contracts/FakeResponse';
 import type { Request } from '@/contracts/Request';
 import type { Response } from '@/contracts/Response';
 import type { Method } from '@/enums';
+import { createMiddlewarePipeline, type MiddlewarePipeline } from '@/helpers/middlewarePipeline';
 import { joinUrl } from '@/helpers/urlHelper';
+import { validateProperties } from '@/http/middleware/validateProperties';
+import { authenticate } from '@/http/pending/authenticate';
+import { bootConnectorAndRequest } from '@/http/pending/bootConnectorAndRequest';
+import { bootPlugins } from '@/http/pending/bootPlugins';
 import { mergeBody } from '@/http/pending/mergeBody';
 import { mergeRequestProperties } from '@/http/pending/mergeRequestProperties';
 import { responseFromFetch } from '@/http/response';
@@ -23,9 +34,15 @@ export type ResponseFactory = (
   cause?: unknown,
 ) => Promise<Response>;
 
-/** The ordered tap sequence; later slices append boot/auth/delay taps. */
+/** The ordered sync tap sequence run at build time (boot → merge → authenticate). */
 type Tap = (pending: PendingRequest) => void;
-const TAPS: Tap[] = [mergeRequestProperties, mergeBody];
+const TAPS: Tap[] = [
+  bootPlugins,
+  mergeRequestProperties,
+  mergeBody,
+  authenticate,
+  bootConnectorAndRequest,
+];
 
 export interface PendingRequest {
   url: string;
@@ -33,12 +50,20 @@ export interface PendingRequest {
   headers: ArrayStore<HeaderValue>;
   query: ArrayStore<QueryValue>;
   config: ArrayStore<ConfigValue>;
+  /** This send's request/response/fatal middleware pipeline. */
+  middleware: MiddlewarePipeline;
   getConnector(): Connector;
   getRequest(): Request;
   getResponseFactory(): ResponseFactory;
+  /** The resolved authenticator (request auth beats connector auth), or undefined. */
+  getAuthenticator(): Authenticator | undefined;
   /** The merged body, set by the MergeBody tap. */
   getBody(): BodyRepository | undefined;
   setBody(body: BodyRepository | undefined): void;
+  /** A fake response stashed by a request pipe (the mock path lands in Slice 6). */
+  setFakeResponse(fake: FakeResponse): void;
+  getFakeResponse(): FakeResponse | undefined;
+  hasFakeResponse(): boolean;
   /** Materialize the native fetch `(url, init)` pair from the current state. */
   createFetchRequest(): { url: string; init: RequestInit };
 }
@@ -48,6 +73,20 @@ export function createPendingRequest<TDto>(
   request: Request<TDto>,
 ): PendingRequest {
   let body: BodyRepository | undefined;
+  let fakeResponse: FakeResponse | undefined;
+
+  // Resolve the authenticator once, lazily: request auth beats connector auth, and
+  // either may be a thunk (resolved here).
+  let authenticatorResolved = false;
+  let authenticator: Authenticator | undefined;
+  const resolveAuthenticator = (): Authenticator | undefined => {
+    if (!authenticatorResolved) {
+      const auth = request.auth ?? connector.auth;
+      authenticator = typeof auth === 'function' ? auth() : auth;
+      authenticatorResolved = true;
+    }
+    return authenticator;
+  };
 
   // Stores start empty; the taps merge connector→request into them.
   const pending: PendingRequest = {
@@ -56,19 +95,30 @@ export function createPendingRequest<TDto>(
     headers: createArrayStore<HeaderValue>(),
     query: createArrayStore<QueryValue>(),
     config: createArrayStore<ConfigValue>(),
+    middleware: createMiddlewarePipeline(),
     getConnector: () => connector,
     getRequest: () => request,
     getResponseFactory: () => responseFromFetch,
+    getAuthenticator: resolveAuthenticator,
     getBody: () => body,
     setBody: (next) => {
       body = next;
     },
+    setFakeResponse: (next) => {
+      fakeResponse = next;
+    },
+    getFakeResponse: () => fakeResponse,
+    hasFakeResponse: () => fakeResponse !== undefined,
     createFetchRequest: () => buildFetchRequest(pending),
   };
 
   for (const tap of TAPS) {
     tap(pending);
   }
+
+  // Registered after the taps so it runs once the plugin/user request pipes are in
+  // place; the async pipeline itself runs in `send`.
+  pending.middleware.onRequest(validateProperties, 'validateProperties');
 
   return pending;
 }
@@ -102,7 +152,14 @@ function buildFetchRequest(pending: PendingRequest): { url: string; init: Reques
     }
   }
 
-  return { url: url.toString(), init };
+  // Connector then request fetch hooks get the last word over the native init.
+  const connector = pending.getConnector();
+  const request = pending.getRequest();
+  let finalInit = init;
+  finalInit = connector.handleFetchRequest?.(finalInit, pending) ?? finalInit;
+  finalInit = request.handleFetchRequest?.(finalInit, pending) ?? finalInit;
+
+  return { url: url.toString(), init: finalInit };
 }
 
 function resolveBaseUrl(connector: Connector): string {
