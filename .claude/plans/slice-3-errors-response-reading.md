@@ -26,12 +26,14 @@ buffered once in Slice 1 (fetch bodies are single-use streams).
 
 - `status(): number`
 - `body(): string`
-- `json<T = unknown>(): T` — whole body parsed as JSON.
+- `json<T = unknown>(): Result<T, SyntaxError>` — whole body parsed as JSON, as a
+  `Result` (malformed JSON → `err`, never throws).
 - `json<T = unknown>(key: string, defaultValue?: T): T` — dot-path getter over the
-  parsed object (PHP `json($key)` / `ArrayHelpers::get` with dot notation). Missing
-  path → `defaultValue` (else `undefined`).
-- `object<T = unknown>(): T` — alias of whole-body `json()` (TS has no stdClass
-  vs array split; kept for SaloonPHP parity / readability).
+  parsed object (PHP `json($key)` / `ArrayHelpers::get` with dot notation). A
+  missing path **or a malformed body** → `defaultValue` (else `undefined`); this
+  forgiving accessor never throws and never returns a `Result`.
+- `object<T = unknown>(): Result<T, SyntaxError>` — alias of whole-body `json()`
+  (TS has no stdClass vs array split; kept for SaloonPHP parity / readability).
 - `header(name: string): string | undefined` — single header, case-insensitive.
 - `headers(): ArrayStore<string>` — the (case-folded) header store.
 
@@ -97,16 +99,16 @@ per-status `isUnauthorizedError`, `isPaymentRequiredError`, `isForbiddenError`,
 any 4xx (including the named ones); `isServerError` for any 5xx; `isRequestError`
 for the whole family. (`isSaloonError`/`isFatalRequestError` already exist.)
 
-### 6. `json()` / parse failures stay ergonomic (documented choice)
+### 6. `json()` is return-based — parse failures never throw
 
-`json()` does **not** return a `Result`. A malformed-JSON body throws the plain
-`SyntaxError` that `JSON.parse` raises — *not* a `SaloonError`. This keeps the
-public reading surface ergonomic (`res.json<T>()` returns `T`, no unwrapping) and
-preserves the invariant precisely: **no `SaloonError` is thrown by the core.** A
-`SyntaxError` from bad JSON is an ordinary programming/runtime error, distinct from
-the library's error model, and is what a JS dev expects from a `.json()` call.
-(DTO parsing — `dto()` — arrives in Slice 7 and will make the same ergonomic
-choice.)
+Whole-body `json()` (and its `object()` alias) returns `Result<T, SyntaxError>`: a
+malformed-JSON body yields `err(SyntaxError)` rather than throwing. This upholds the
+core invariant literally — **the only error the core throws is the network
+`FatalRequestError`** — and lets callers handle "the server returned non-JSON" as a
+value (`isOk`/`isErr`). The dot-path `json(key, default?)` stays a forgiving value
+accessor: a malformed body or missing key falls back to `defaultValue`, never
+throwing. (DTO parsing — `dto()` — arrives in Slice 7 and will follow the same
+return-based shape.)
 
 ## Files
 

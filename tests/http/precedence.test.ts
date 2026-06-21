@@ -4,6 +4,7 @@ import { defineConnector } from '@/http/defineConnector';
 import { defineRequest } from '@/http/defineRequest';
 import { send } from '@/http/send';
 import { withConfig, withHeaders, withQuery } from '@/http/transformers';
+import { expectOk } from '../support/expectOk';
 import { startTestServer, type TestServer } from '../support/testServer';
 
 interface Echo {
@@ -40,7 +41,7 @@ describe('connector → request precedence', () => {
         headers: { 'X-App': 'request' },
       });
 
-      const echo = (await send(connector(), request)).json<Echo>();
+      const echo = expectOk((await send(connector(), request)).json<Echo>());
       expect(echo.headers['x-app']).toBe('request');
       expect(echo.headers['x-connector-only']).toBe('yes');
     });
@@ -52,9 +53,9 @@ describe('connector → request precedence', () => {
         headers: { 'X-App': 'request' },
       });
 
-      const echo = (
-        await send(connector(), withHeaders(request, { 'X-App': 'override' }))
-      ).json<Echo>();
+      const echo = expectOk(
+        (await send(connector(), withHeaders(request, { 'X-App': 'override' }))).json<Echo>(),
+      );
       expect(echo.headers['x-app']).toBe('override');
     });
   });
@@ -68,7 +69,7 @@ describe('connector → request precedence', () => {
         query: { who: 'request', extra: 'r' },
       });
 
-      const echo = (await send(connector, request)).json<Echo>();
+      const echo = expectOk((await send(connector, request)).json<Echo>());
       expect(echo.query.who).toBe('request');
       expect(echo.query.extra).toBe('r');
     });
@@ -80,7 +81,9 @@ describe('connector → request precedence', () => {
         query: { who: 'store' },
       });
 
-      const echo = (await send(defineConnector({ baseUrl: server.url }), request)).json<Echo>();
+      const echo = expectOk(
+        (await send(defineConnector({ baseUrl: server.url }), request)).json<Echo>(),
+      );
       expect(echo.query.who).toBe('store');
     });
 
@@ -92,7 +95,9 @@ describe('connector → request precedence', () => {
         query: { who: 'request' },
       });
 
-      const echo = (await send(connector, withQuery(request, { who: 'override' }))).json<Echo>();
+      const echo = expectOk(
+        (await send(connector, withQuery(request, { who: 'override' }))).json<Echo>(),
+      );
       expect(echo.query.who).toBe('override');
     });
   });

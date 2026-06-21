@@ -21,12 +21,12 @@ export interface Response<TDto = unknown> {
   header(name: string): string | undefined;
   /** The raw response body, buffered once. */
   body(): string;
-  /** The body parsed as JSON. */
-  json<T = unknown>(): T;
-  /** A dot-path read off the parsed JSON body, falling back to `defaultValue`. */
+  /** The body parsed as JSON, as a `Result` — malformed JSON yields `err` (never throws). */
+  json<T = unknown>(): Result<T, SyntaxError>;
+  /** A dot-path read off the parsed JSON body, falling back to `defaultValue` (also on malformed JSON). */
   json<T = unknown>(key: string, defaultValue?: T): T;
-  /** Alias of whole-body `json()` (SaloonPHP `object()` parity). */
-  object<T = unknown>(): T;
+  /** Whole-body JSON as a `Result` (SaloonPHP `object()` parity). */
+  object<T = unknown>(): Result<T, SyntaxError>;
 
   /** `status === 200`. */
   ok(): boolean;

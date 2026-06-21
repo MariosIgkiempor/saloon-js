@@ -3,8 +3,11 @@ import { Method } from '@/enums';
 import { isNotFoundError, isRequestError } from '@/errors';
 import { defineConnector } from '@/http/defineConnector';
 import { defineRequest } from '@/http/defineRequest';
+import { createPendingRequest } from '@/http/pendingRequest';
+import { responseFromFetch } from '@/http/response';
 import { send } from '@/http/send';
 import { isErr, isOk } from '@/result';
+import { expectOk } from '../support/expectOk';
 import { startTestServer, type TestServer } from '../support/testServer';
 
 describe('Response reading API', () => {
@@ -31,7 +34,7 @@ describe('Response reading API', () => {
     it('reads the raw body and parses JSON', async () => {
       const response = await send(connector(), get('/get'));
       expect(typeof response.body()).toBe('string');
-      const body = response.json<{ path: string }>();
+      const body = expectOk(response.json<{ path: string }>());
       expect(body.path).toBe('/get');
     });
 
@@ -44,7 +47,22 @@ describe('Response reading API', () => {
 
     it('object() returns the whole parsed body', async () => {
       const response = await send(connector(), get('/get'));
-      expect(response.object<{ method: string }>().method).toBe('GET');
+      expect(expectOk(response.object<{ method: string }>()).method).toBe('GET');
+    });
+
+    it('json() returns err on a malformed body instead of throwing', async () => {
+      const pending = createPendingRequest(connector(), get('/'));
+      const malformed = new Response('<<not json>>', {
+        status: 200,
+        headers: { 'content-type': 'text/plain' },
+      });
+      const response = await responseFromFetch(malformed, pending, {});
+
+      const result = response.json();
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error).toBeInstanceOf(SyntaxError);
+      }
     });
 
     it('reads a single header case-insensitively', async () => {

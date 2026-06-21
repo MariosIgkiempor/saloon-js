@@ -7,6 +7,7 @@ import { formBody } from '@/repositories/body/formBody';
 import { jsonBody } from '@/repositories/body/jsonBody';
 import { multipartBody } from '@/repositories/body/multipartBody';
 import { stringBody } from '@/repositories/body/stringBody';
+import { expectOk } from '../support/expectOk';
 import { startTestServer, type TestServer } from '../support/testServer';
 
 interface Echo {
@@ -41,7 +42,7 @@ describe('POST with a body', () => {
       body: jsonBody({ name: 'Ada' }),
     });
 
-    const echo = (await send(api(), request)).json<Echo>();
+    const echo = expectOk((await send(api(), request)).json<Echo>());
     expect(echo.method).toBe('POST');
     expect(echo.headers['content-type']).toContain('application/json');
     expect(echo.body).toEqual({ name: 'Ada' });
@@ -54,7 +55,7 @@ describe('POST with a body', () => {
       body: formBody({ a: '1', b: '2' }),
     });
 
-    const echo = (await send(api(), request)).json<Echo>();
+    const echo = expectOk((await send(api(), request)).json<Echo>());
     expect(echo.headers['content-type']).toContain('application/x-www-form-urlencoded');
     expect(echo.body).toEqual({ a: '1', b: '2' });
   });
@@ -66,7 +67,7 @@ describe('POST with a body', () => {
       body: multipartBody([{ name: 'field', value: 'value' }]),
     });
 
-    const echo = (await send(api(), request)).json<Echo>();
+    const echo = expectOk((await send(api(), request)).json<Echo>());
     expect(echo.headers['content-type']).toContain('multipart/form-data');
     expect(echo.headers['content-type']).toContain('boundary=');
     expect(echo.rawBody).toContain('name="field"');
@@ -80,7 +81,7 @@ describe('POST with a body', () => {
       body: stringBody('raw payload', 'text/plain'),
     });
 
-    const echo = (await send(api(), request)).json<Echo>();
+    const echo = expectOk((await send(api(), request)).json<Echo>());
     expect(echo.headers['content-type']).toContain('text/plain');
     expect(echo.rawBody).toBe('raw payload');
   });

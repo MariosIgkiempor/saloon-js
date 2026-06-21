@@ -13,7 +13,7 @@ import type { Response } from '@/contracts/Response';
 import { createRequestError, type RequestError } from '@/errors/RequestError';
 import type { PendingRequest } from '@/http/pendingRequest';
 import { createArrayStore } from '@/repositories/arrayStore';
-import { err, ok as okResult, type Result } from '@/result';
+import { err, isErr, ok as okResult, type Result } from '@/result';
 
 export async function responseFromFetch(
   res: globalThis.Response,
@@ -23,13 +23,21 @@ export async function responseFromFetch(
 ): Promise<Response> {
   const bodyText = await res.text();
   const headerStore = createArrayStore<string>(Object.fromEntries(res.headers.entries()));
-  // Parsed lazily and cached — `json`/`object`/the dot-path read share one parse.
-  let parsed: unknown;
-  let didParse = false;
-  const parse = (): unknown => {
-    if (!didParse) {
-      parsed = bodyText === '' ? undefined : JSON.parse(bodyText);
-      didParse = true;
+  // Parsed lazily and cached as a `Result` — `json`/`object`/the dot-path read
+  // share one parse. Malformed JSON yields `err(SyntaxError)` rather than throwing,
+  // keeping the invariant that the only error the core throws is the network one.
+  let parsed: Result<unknown, SyntaxError> | undefined;
+  const parse = (): Result<unknown, SyntaxError> => {
+    if (parsed === undefined) {
+      if (bodyText === '') {
+        parsed = okResult(undefined);
+      } else {
+        try {
+          parsed = okResult(JSON.parse(bodyText) as unknown);
+        } catch (error) {
+          parsed = err(error as SyntaxError);
+        }
+      }
     }
     return parsed;
   };
@@ -47,12 +55,15 @@ export async function responseFromFetch(
     headers: () => headerStore,
     header: (name) => headerStore.get(name.toLowerCase()),
     body: () => bodyText,
-    json: <T = unknown>(key?: string, defaultValue?: T): T => {
-      const data = parse();
-      if (key === undefined) return data as T;
-      return getByPath(data, key, defaultValue) as T;
-    },
-    object: <T = unknown>(): T => parse() as T,
+    json: (<T = unknown>(key?: string, defaultValue?: T): Result<T, SyntaxError> | T => {
+      const result = parse();
+      if (key === undefined) return result as Result<T, SyntaxError>;
+      // Dot-path read: a forgiving accessor — malformed JSON or a missing key
+      // falls back to `defaultValue` instead of surfacing the parse error.
+      if (isErr(result)) return defaultValue as T;
+      return getByPath(result.value, key, defaultValue) as T;
+    }) as Response['json'],
+    object: <T = unknown>(): Result<T, SyntaxError> => parse() as Result<T, SyntaxError>,
     ok,
     successful,
     redirect,
