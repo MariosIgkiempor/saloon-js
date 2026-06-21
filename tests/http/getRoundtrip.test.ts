@@ -4,6 +4,7 @@ import { isFatalRequestError } from '@/errors';
 import { defineConnector } from '@/http/defineConnector';
 import { defineRequest } from '@/http/defineRequest';
 import { send } from '@/http/send';
+import { expectOk } from '../support/expectOk';
 import { startTestServer, type TestServer } from '../support/testServer';
 
 interface Echo {
@@ -34,7 +35,7 @@ describe('GET round-trip', () => {
     const response = await send(defineConnector({ baseUrl: server.url }), echo());
 
     expect(response.status()).toBe(200);
-    const body = response.json<Echo>();
+    const body = expectOk(response.json<Echo>());
     expect(body.method).toBe('GET');
     expect(body.path).toBe('/get');
   });
@@ -52,7 +53,7 @@ describe('GET round-trip', () => {
       query: { source: 'connector' },
     });
 
-    const body = (await send(connector, echo())).json<Echo>();
+    const body = expectOk((await send(connector, echo())).json<Echo>());
     expect(body.headers['x-app']).toBe('demo');
     expect(body.query.source).toBe('connector');
   });
@@ -70,7 +71,7 @@ describe('GET round-trip', () => {
       query: { who: 'request', extra: 'r' },
     });
 
-    const body = (await send(connector, request)).json<Echo>();
+    const body = expectOk((await send(connector, request)).json<Echo>());
     expect(body.headers['x-app']).toBe('request'); // request wins
     expect(body.headers['x-connector-only']).toBe('yes'); // connector preserved
     expect(body.query.who).toBe('request'); // request wins

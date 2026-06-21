@@ -1,138 +1,157 @@
 # Slice 3 — Error model & full response reading
 
-> **⚠️ Revised direction (PR #4):** the error model is now **return-based**, built
-> on the internal `Result<T, E>` primitive (`src/result.ts`). `send` throws **only**
-> the network `FatalRequestError`; nothing else throws. The thrown status-class
-> hierarchy + per-status predicates (`isNotFoundError`, `createRequestError`, …)
-> described below are **superseded** — see the "Error handling" section of
-> `api-style.md`. When this slice is implemented, rework it around `Result` +
-> `response.failed()`/inspection rather than the throw-based hierarchy below.
-
-> **API style:** functional, no classes — see `api-style.md`. **Errors are the
-> deliberate carve-out**: real `class … extends Error`, but constructed by a
-> factory and discriminated by **predicate helpers** as the primary API. Users
-> never author/subclass them — only catch them. Naming uses the JS-idiomatic
-> `*Error` suffix (not PHP `*Exception`) so class names mirror predicate names.
+> **Reworked around the return-based error model (PR #4).** The thrown
+> status-class hierarchy + per-status predicates originally specced here are
+> **dropped**. The error model is now built on the internal `Result<T, E>`
+> primitive (`src/result.ts`). `send` throws **only** the network
+> `FatalRequestError`; nothing else in the core throws a `SaloonError`. See the
+> "Error handling: return-based internally, throw only the network error" section
+> of `api-style.md` for the policy this slice implements.
 
 ## Goal
-Complete the typed-error hierarchy and the full `Response` reading API. The core
-**never throws** on a 4xx/5xx by default — errors are *returned* by
-`response.toError()` and only *thrown* on opt-in (`response.throw()`,
-`alwaysThrowOnErrors` in Slice 4) or transport failure (`FatalRequestError`,
-already in Slice 1). This slice makes "inspect the failure" a first-class flow.
 
-## Example (consumer API)
-```ts
-import { send, isNotFoundError, isServerError, isRequestError } from 'saloon-js';
+Complete the full `Response` reading surface and make "inspect / obtain the
+failure as a value" a first-class flow — **without throwing** on 4xx/5xx. A
+response with an error status is a *successful round-trip*: it comes back as a
+`Response` to read. Getting the failure as a value is `response.toResult()`
+(returns `Result<Response, RequestError>`). `RequestError` is **data** that lives
+in the `Err` channel — `send` never throws it.
 
-// 4xx/5xx resolve — they do NOT throw by default.
-const res = await send(api, getUser('ghost'));   // 404
-res.failed();             // true
-res.successful();         // false
-res.status();             // 404
-res.json('error.message'); // keyed / dot-path read
-res.header('x-ratelimit-remaining');
+## Design (the decisions this slice settles)
 
-// Inspect without throwing:
-const err = res.toError();     // NotFoundError | undefined
-res.onError((r) => console.warn(`failed: ${r.status()}`));
+### 1. Full `Response` reading surface (methods on the response object)
 
-// Opt in to throwing, then discriminate via predicates (not instanceof):
-try {
-  (await send(api, getUser('ghost'))).throw();
-} catch (e) {
-  if (isNotFoundError(e)) {/* 404 */}
-  else if (isServerError(e)) {/* 5xx */}
-  else if (isRequestError(e)) {/* other 4xx */}
-}
-```
+Grow the Slice-1 response factory's returned object. All reads are off the body
+buffered once in Slice 1 (fetch bodies are single-use streams).
+
+- `status(): number`
+- `body(): string`
+- `json<T = unknown>(): Result<T, SyntaxError>` — whole body parsed as JSON, as a
+  `Result` (malformed JSON → `err`, never throws).
+- `json<T = unknown>(key: string, defaultValue?: T): T` — dot-path getter over the
+  parsed object (PHP `json($key)` / `ArrayHelpers::get` with dot notation). A
+  missing path **or a malformed body** → `defaultValue` (else `undefined`); this
+  forgiving accessor never throws and never returns a `Result`.
+- `object<T = unknown>(): Result<T, SyntaxError>` — alias of whole-body `json()`
+  (TS has no stdClass vs array split; kept for SaloonPHP parity / readability).
+- `header(name: string): string | undefined` — single header, case-insensitive.
+- `headers(): ArrayStore<string>` — the (case-folded) header store.
+
+### 2. Status predicates as methods on the response (return-based, no throwing)
+
+Mirror SaloonPHP's `Response` helpers exactly:
+
+- `ok()` — `status === 200`
+- `successful()` — `200 ≤ status < 300`
+- `redirect()` — `300 ≤ status < 400`
+- `clientError()` — `400 ≤ status < 500`
+- `serverError()` — `status ≥ 500`
+- `failed()` — `clientError() || serverError()` (i.e. `status ≥ 400`). (SaloonPHP
+  also consults connector/request custom failure detectors first; that hook is
+  deferred to Slice 4, which owns connector/request behavior taps. The default
+  `status ≥ 400` matches SaloonPHP's fallback when no detector is set.)
+- `onError(cb: (response) => void): Response` — calls `cb(this)` when `failed()`,
+  returns `this` for chaining.
+
+### 3. Obtain the failure as a value (the headline of this slice)
+
+- `toResult(): Result<Response, RequestError>` — `ok(response)` when not failed;
+  `err(createRequestError(response))` when `failed()`. This is the canonical
+  return-based accessor: callers `if (isErr(res.toResult())) …` or destructure.
+
+No `throw()` method, no `toException()`, no `alwaysThrowOnErrors`. The maintainer's
+stated invariant — "the only thrown error is the network error" — is kept: the
+core never throws a `RequestError`. Callers who *want* throwing semantics already
+have it for transport via `await`; for HTTP failures they opt in trivially
+(`const { value } = unwrap(res.toResult())` style) in their own code.
+
+### 4. `RequestError` — data in the `Err` channel, not a throwable the core uses
+
+`RequestError extends SaloonError` (it *is* an `Error` so it carries a stack and
+can be thrown by a *consumer* if they choose), but **the core only ever returns it
+inside `Result.err`** — `send`/the sender never throw it.
+
+To avoid the sprawling class tree of the old design while keeping idiomatic
+predicates, `RequestError` is a **single class** carrying:
+
+- `status: number`
+- `statusName: RequestErrorKind` — a discriminant (`'unauthorized'`,
+  `'notFound'`, `'serverError'`, `'clientError'`, `'requestError'`, …) so
+  per-status predicates are O(1) and don't need a subclass each.
+- accessors `getResponse()`, `getStatus()`, `getPendingRequest()`.
+- Default message (PHP parity):
+  `` `${statusText} (${status}) Response: ${bodyExcerpt}` `` with the body
+  truncated to `maxBodyLength = 2000`.
+
+`createRequestError(response): RequestError` ports `RequestExceptionHelper.php`:
+maps 401/402/403/404/405/408/422/429/500/503/504 → their `statusName`; else
+`serverError()` → `'serverError'`, `clientError()` → `'clientError'`, otherwise
+`'requestError'`.
+
+### 5. Predicates (`src/errors/predicates.ts`, extending Slice 1's)
+
+Pure functions over the `statusName` discriminant (with `instanceof RequestError`
+guarding first): `isRequestError`, `isClientError`, `isServerError`, and the
+per-status `isUnauthorizedError`, `isPaymentRequiredError`, `isForbiddenError`,
+`isNotFoundError`, `isMethodNotAllowedError`, `isRequestTimeoutError`,
+`isUnprocessableEntityError`, `isTooManyRequestsError`, `isInternalServerError`,
+`isServiceUnavailableError`, `isGatewayTimeoutError`. `isClientError` is true for
+any 4xx (including the named ones); `isServerError` for any 5xx; `isRequestError`
+for the whole family. (`isSaloonError`/`isFatalRequestError` already exist.)
+
+### 6. `json()` is return-based — parse failures never throw
+
+Whole-body `json()` (and its `object()` alias) returns `Result<T, SyntaxError>`: a
+malformed-JSON body yields `err(SyntaxError)` rather than throwing. This upholds the
+core invariant literally — **the only error the core throws is the network
+`FatalRequestError`** — and lets callers handle "the server returned non-JSON" as a
+value (`isOk`/`isErr`). The dot-path `json(key, default?)` stays a forgiving value
+accessor: a malformed body or missing key falls back to `defaultValue`, never
+throwing. (DTO parsing — `dto()` — arrives in Slice 7 and will follow the same
+return-based shape.)
 
 ## Files
 
-### Error hierarchy `src/errors/` (extends Slice 1's `SaloonError`/`FatalRequestError`)
-```
-SaloonError (extends Error)              [Slice 1]
-└─ RequestError          (has response, status, body excerpt)
-   ├─ ClientError        (4xx fallback)
-   │  ├─ UnauthorizedError (401)        ├─ MethodNotAllowedError (405)
-   │  ├─ PaymentRequiredError (402)     ├─ RequestTimeoutError (408)
-   │  ├─ ForbiddenError (403)           ├─ UnprocessableEntityError (422)
-   │  ├─ NotFoundError (404)            └─ TooManyRequestsError (429)
-   └─ ServerError        (5xx fallback)
-      ├─ InternalServerError (500)
-      ├─ ServiceUnavailableError (503)
-      └─ GatewayTimeoutError (504)
-FatalRequestError (extends SaloonError)  [Slice 1]
-```
-
-### `RequestError.ts`
-- `constructor(response, message?, options?: { cause? })`
-- Default message: `` `${statusText} (${status}) Response: ${bodyExcerpt}` `` —
-  body truncated to `maxBodyLength = 2000`.
-- Accessors: `getResponse()`, `getPendingRequest()`, `getStatus()`.
-
-### `createRequestError.ts`
-Port of `RequestExceptionHelper.php` (renamed). Internal factory used by
-`Response.toError()`/`.throw()` (and the Slice-5 retry loop):
-```ts
-export function createRequestError(response: Response, cause?: unknown): RequestError
-```
-Map exact statuses (401/402/403/404/405/408/422/429/500/503/504) → specific class;
-else 5xx → `ServerError`, 4xx → `ClientError`, otherwise → `RequestError`.
-
-### `predicates.ts` (the primary discrimination API — extends Slice 1's)
-Pure functions (`instanceof` internally is fine; callers use the predicate):
-`isRequestError`, `isClientError`, `isServerError`, plus per-status
-`isNotFoundError`, `isUnauthorizedError`, `isForbiddenError`,
-`isTooManyRequestsError`, `isUnprocessableEntityError`, … (mirror each status class).
-(`isSaloonError`/`isFatalRequestError` already exist from Slice 1.)
-
-### `src/http/response.ts` — complete the reading API
-Grow the Slice-1 factory's returned object:
-- `json<T = unknown>(): T`, with keyed/dot-path overloads `json<K>(key, default?)`
-  (simple dot-path getter, like PHP `json($key)`).
-- `object<T>()`, `body(): string`, `header(name): string | null`, `headers(): ArrayStore`
-- status helpers: `successful()` (200–299), `ok()` (200), `redirect()` (300–399),
-  `failed()` (≥400 or custom), `clientError()` (400–499), `serverError()` (≥500)
-- `onError(cb)` — calls `cb(this)` if failed, returns `this`
-- `throw()` — if `failed()`, throw `createRequestError(this)`; else return `this`
-- `toError()` — return `createRequestError(this)` (or undefined if not failed)
-- `saveBodyToFile(path)` — write buffered body to disk (Node `fs`)
-- (`isMocked()`/`isCached()` are added in Slice 6, and `dto()`/`dtoOrFail()` in
-  Slice 7 — the slices that introduce the faking flags and the DTO hook they read.
-  Don't add them here.)
-
-### Custom responses
-PHP `HasCustomResponses` → a `responseFactory` config hook on connector/request
-(request → connector → default `responseFromFetch`). Wire the hook resolution in
-`pendingRequest.getResponseFactory()` now; the field is read by the fetch sender.
+- `src/result.ts` — already present (Slice's foundation). Add a small `unwrap`
+  helper? No — keep `result.ts` minimal (`ok/err/isOk/isErr`); the slice needs no
+  more.
+- `src/errors/RequestError.ts` — new. The single `RequestError` class + the
+  `RequestErrorKind` discriminant + `createRequestError` factory + the
+  status→kind map. (`createRequestError` lives here, co-located with the class it
+  builds, rather than a separate `createRequestError.ts`.)
+- `src/errors/predicates.ts` — extend with the `RequestError` predicates.
+- `src/errors/index.ts` — export `RequestError`, `createRequestError`,
+  `RequestErrorKind`, and the new predicates.
+- `src/contracts/Response.ts` — extend the `Response` interface with the new
+  reading + status + `toResult`/`onError` members.
+- `src/http/response.ts` — implement them in the factory.
+- `src/index.ts` — re-export the new public surface.
 
 ## Tests (`tests/errors/`, `tests/http/`)
-- `createRequestError.test.ts`: stub `Response` per status → assert instance type
-  (404 → `NotFoundError`, 418 → `ClientError`, 500 → `InternalServerError`,
-  599 → `ServerError`, 302 → `RequestError`).
-- `requestError.test.ts`: default message format; body truncation at 2000;
-  `instanceof` chain (NotFoundError ⊂ ClientError ⊂ RequestError ⊂ SaloonError).
-- `predicates.test.ts`: each predicate narrows correctly; false for unrelated
-  errors / non-errors.
-- `response.test.ts` (live server): `json` keyed + dot-path; status-helper
-  boundaries; `onError`; 404 → `response.failed()` true and `response.toError()`
-  returns `NotFoundError`; `.throw()` opt-in throws the mapped error; non-failed
-  `.throw()` returns `this`.
-- `customResponse.test.ts`: a connector/request `responseFactory` hook is invoked
-  by `getResponseFactory()` and its custom object is returned from `send` (request
-  factory overrides connector). (Justifies introducing the hook in this slice —
-  don't add `responseFactory` until this test exercises it.)
+
+- `tests/errors/requestError.test.ts`: `createRequestError` status→kind mapping
+  (404 → `notFound`, 418 → `clientError`, 500 → `internalServerError`, 599 →
+  `serverError`, 302 → `requestError`); default message format; body truncation at
+  2000; `instanceof SaloonError`/`Error`.
+- `tests/errors/predicates.test.ts`: each predicate narrows correctly; false for
+  unrelated errors / non-errors; `isClientError`/`isServerError`/`isRequestError`
+  family relationships.
+- `tests/http/response.test.ts` (live `testServer`): read success body; `json`
+  dot-path + default; `object()`; `header()`; every status-class predicate at its
+  boundaries via `/status/:code`; `onError` fires only on failure; **404 →
+  `failed()` true, `toResult()` is `Err` carrying a `NotFoundError`-kind
+  `RequestError`, and nothing throws**; a 2xx → `toResult()` is `Ok(response)`.
 
 ## Done criteria
-- Full hierarchy + predicates exported from `src/errors/index.ts`.
-- Mapper + message/inheritance + predicate specs green.
-- Response reading API fully specced; 4xx still resolves without throwing;
-  `.throw()`/`.toError()` work.
-- Core throws these **only** via `.throw()`/sender wiring (grep-verify).
+
+- `Response` reading surface complete; 4xx/5xx resolve without throwing.
+- `toResult()` returns the failure as a value; `RequestError` + predicates exported.
+- Core throws **only** `FatalRequestError` (grep-verify: no `throw new RequestError`
+  anywhere in `src/`).
+- `pnpm test:everything` + `pnpm build` green.
 
 ## Reference
-- `../saloon/src/Exceptions/Request/{RequestException,ClientException,ServerException}.php`
-- `../saloon/src/Exceptions/Request/Statuses/*.php`
-- `../saloon/src/Helpers/RequestExceptionHelper.php`
-- `../saloon/src/Http/Response.php`
+
+- `../saloon/src/Http/Response.php` (status helpers, `json($key)`, `onError`)
+- `../saloon/src/Helpers/RequestExceptionHelper.php` (status→class map)
+- `../saloon/src/Exceptions/Request/RequestException.php` (message format, 2000 cap)
