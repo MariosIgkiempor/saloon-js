@@ -23,6 +23,7 @@ export function defineConnector(config: ConnectorConfig): Connector {
     middleware: config.middleware,
     boot: config.boot,
     handleFetchRequest: config.handleFetchRequest,
+    mockClient: config.mockClient,
     sender: config.sender ?? getDefaultSender(),
     name: config.name,
   };

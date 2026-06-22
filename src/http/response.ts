@@ -15,12 +15,21 @@ import type { PendingRequest } from '@/http/pendingRequest';
 import { createArrayStore } from '@/repositories/arrayStore';
 import { err, isErr, ok as okResult, type Result } from '@/result';
 
+/** Source flags carried onto the `Response` (mocked/cached); both default false. */
+export interface ResponseFlags {
+  mocked?: boolean;
+  cached?: boolean;
+}
+
 export async function responseFromFetch(
   res: globalThis.Response,
   pending: PendingRequest,
   _fetchRequest: RequestInit,
   _cause?: unknown,
+  flags: ResponseFlags = {},
 ): Promise<Response> {
+  const mocked = flags.mocked ?? false;
+  const cached = flags.cached ?? false;
   const bodyText = await res.text();
   const headerStore = createArrayStore<string>(Object.fromEntries(res.headers.entries()));
   // Parsed lazily and cached as a `Result` — `json`/`object`/the dot-path read
@@ -84,6 +93,8 @@ export async function responseFromFetch(
     getRequest: (): Request => pending.getRequest(),
     getConnector: (): Connector => pending.getConnector(),
     getFetchResponse: () => res,
+    isMocked: () => mocked,
+    isCached: () => cached,
   };
 
   return response;

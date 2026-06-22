@@ -4,6 +4,7 @@
 
 import type { Authenticator } from '@/contracts/Authenticator';
 import type { BodyRepository } from '@/contracts/BodyRepository';
+import type { MockClient } from '@/contracts/MockClient';
 import type { Plugin } from '@/contracts/Plugin';
 import type { Sender } from '@/contracts/Sender';
 import type { MiddlewarePipeline } from '@/helpers/middlewarePipeline';
@@ -42,6 +43,8 @@ export interface Connector {
   middleware?: MiddlewareRegistrar;
   boot?: BootHook;
   handleFetchRequest?: FetchRequestHook;
+  // Default mock client for this connector (overridden by per-call/request/global).
+  mockClient?: MockClient;
   sender: Sender;
   name?: string;
 }
@@ -58,6 +61,7 @@ export interface ConnectorConfig {
   middleware?: MiddlewareRegistrar;
   boot?: BootHook;
   handleFetchRequest?: FetchRequestHook;
+  mockClient?: MockClient;
   sender?: Sender;
   name?: string;
 }

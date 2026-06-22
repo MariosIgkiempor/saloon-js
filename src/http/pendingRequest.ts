@@ -13,11 +13,14 @@ import type { Authenticator } from '@/contracts/Authenticator';
 import type { BodyRepository } from '@/contracts/BodyRepository';
 import type { ConfigValue, Connector, HeaderValue, QueryValue } from '@/contracts/Connector';
 import type { FakeResponse } from '@/contracts/FakeResponse';
+import type { MockClient } from '@/contracts/MockClient';
 import type { Request } from '@/contracts/Request';
 import type { Response } from '@/contracts/Response';
 import type { Method } from '@/enums';
+import { getGlobalMockClient } from '@/faking/mockClient';
 import { createMiddlewarePipeline, type MiddlewarePipeline } from '@/helpers/middlewarePipeline';
 import { joinUrl } from '@/helpers/urlHelper';
+import { determineMockResponse } from '@/http/middleware/determineMockResponse';
 import { validateProperties } from '@/http/middleware/validateProperties';
 import { authenticate } from '@/http/pending/authenticate';
 import { bootConnectorAndRequest } from '@/http/pending/bootConnectorAndRequest';
@@ -26,6 +29,12 @@ import { mergeBody } from '@/http/pending/mergeBody';
 import { mergeRequestProperties } from '@/http/pending/mergeRequestProperties';
 import { responseFromFetch } from '@/http/response';
 import { type ArrayStore, createArrayStore } from '@/repositories/arrayStore';
+
+/** Per-call options threaded into `send` (and on to the pending request). */
+export interface SendOptions {
+  /** Mock client for this call (beats request/connector/global mock clients). */
+  mockClient?: MockClient;
+}
 
 export type ResponseFactory = (
   res: globalThis.Response,
@@ -57,6 +66,8 @@ export interface PendingRequest {
   getResponseFactory(): ResponseFactory;
   /** The resolved authenticator (request auth beats connector auth), or undefined. */
   getAuthenticator(): Authenticator | undefined;
+  /** The resolved mock client (call ?? request ?? connector ?? global), or undefined. */
+  getMockClient(): MockClient | undefined;
   /** The merged body, set by the MergeBody tap. */
   getBody(): BodyRepository | undefined;
   setBody(body: BodyRepository | undefined): void;
@@ -71,6 +82,7 @@ export interface PendingRequest {
 export function createPendingRequest<TDto>(
   connector: Connector,
   request: Request<TDto>,
+  options: SendOptions = {},
 ): PendingRequest {
   let body: BodyRepository | undefined;
   let fakeResponse: FakeResponse | undefined;
@@ -88,6 +100,10 @@ export function createPendingRequest<TDto>(
     return authenticator;
   };
 
+  // Mock client precedence: per-call → request → connector → process-global.
+  const mockClient =
+    options.mockClient ?? request.mockClient ?? connector.mockClient ?? getGlobalMockClient();
+
   // Stores start empty; the taps merge connector→request into them.
   const pending: PendingRequest = {
     url: joinUrl(resolveBaseUrl(connector), resolveEndpoint(request), request.allowBaseUrlOverride),
@@ -100,6 +116,7 @@ export function createPendingRequest<TDto>(
     getRequest: () => request,
     getResponseFactory: () => responseFromFetch,
     getAuthenticator: resolveAuthenticator,
+    getMockClient: () => mockClient,
     getBody: () => body,
     setBody: (next) => {
       body = next;
@@ -116,8 +133,10 @@ export function createPendingRequest<TDto>(
     tap(pending);
   }
 
-  // Registered after the taps so it runs once the plugin/user request pipes are in
-  // place; the async pipeline itself runs in `send`.
+  // Registered after the taps so they run once the plugin/user request pipes are in
+  // place; the async pipeline itself runs in `send`. `determineMockResponse` may
+  // stash a fake response that short-circuits the sender.
+  pending.middleware.onRequest(determineMockResponse, 'determineMockResponse');
   pending.middleware.onRequest(validateProperties, 'validateProperties');
 
   return pending;

@@ -18,6 +18,7 @@ export function defineRequest<TDto = unknown>(config: RequestConfig<TDto>): Requ
     middleware: config.middleware,
     boot: config.boot,
     handleFetchRequest: config.handleFetchRequest,
+    mockClient: config.mockClient,
     allowBaseUrlOverride: config.allowBaseUrlOverride ?? false,
     name: config.name,
   };

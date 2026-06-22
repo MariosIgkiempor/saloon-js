@@ -15,7 +15,9 @@ export type {
   RequestOptionsConfig,
 } from '@/contracts/Connector';
 export type { FakeResponse } from '@/contracts/FakeResponse';
+export type { Fixture } from '@/contracts/Fixture';
 export type { MergeableBody } from '@/contracts/MergeableBody';
+export type { MockClient, MockValue, RecordedResponse, SentMatcher } from '@/contracts/MockClient';
 export type { MultipartValue } from '@/contracts/MultipartValue';
 export type { Plugin } from '@/contracts/Plugin';
 export type { Request, RequestConfig } from '@/contracts/Request';
