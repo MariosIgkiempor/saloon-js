@@ -72,7 +72,7 @@ export function createMockClient(mockData?: Map<unknown, MockValue> | MockValue[
       }
     },
     assertSentCount(count, target) {
-      const matcher = target ? buildMatcher(target) : () => true;
+      const matcher = target !== undefined ? buildMatcher(target) : () => true;
       const actual = recorded.filter(matcher).length;
       if (actual !== count) {
         throw new Error(

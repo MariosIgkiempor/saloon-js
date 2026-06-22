@@ -43,6 +43,26 @@ describe('mockResponse', () => {
     expect(res.body()).toBe('plain text');
   });
 
+  it('an empty object body materializes as {} with a JSON content type', async () => {
+    const mock = createMockClient();
+    mock.addResponse(mockResponse({}));
+
+    const res = await send(api, getThing, { mockClient: mock });
+
+    expect(res.body()).toBe('{}');
+    expect(expectOk(res.json())).toEqual({});
+    expect(res.header('content-type')).toContain('application/json');
+  });
+
+  it('preserves a literal "0" string body (no PHP empty() drop on responses)', async () => {
+    const mock = createMockClient();
+    mock.addResponse(mockResponse('0'));
+
+    const res = await send(api, getThing, { mockClient: mock });
+
+    expect(res.body()).toBe('0');
+  });
+
   it('honors a custom status', async () => {
     const mock = createMockClient();
     mock.addResponse(mockResponse({}, 404));

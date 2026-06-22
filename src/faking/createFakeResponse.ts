@@ -20,15 +20,16 @@ export function fakeResponseToResponse(
   const headers = new Headers();
   for (const [key, value] of Object.entries(fake.headers().all())) headers.set(key, String(value));
 
-  let bodyInit: BodyInit | null = null;
-  const bodyRepository = fake.body();
-  if (!bodyRepository.isEmpty()) {
-    const { body, contentType } = bodyRepository.toRequestBody();
-    bodyInit = body;
-    if (contentType !== null && !headers.has('content-type')) {
-      headers.set('content-type', contentType);
-    }
+  // Materialize whatever body the fake carries, verbatim. Unlike the live *request*
+  // path (which drops an "empty" body, including the PHP `empty()` quirk where `'0'`
+  // counts as empty), a mocked *response* must reflect its body exactly — so
+  // `mockResponse({})` yields `{}` and `mockResponse('0')` yields `'0'`.
+  const { body, contentType } = fake.body().toRequestBody();
+  let bodyInit: BodyInit | null = body;
+  if (contentType !== null && !headers.has('content-type')) {
+    headers.set('content-type', contentType);
   }
+  // Statuses the fetch `Response` constructor forbids a body on.
   if (NULL_BODY_STATUSES.has(status)) bodyInit = null;
 
   const native = new Response(bodyInit, { status, headers });
