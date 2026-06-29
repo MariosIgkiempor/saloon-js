@@ -1,0 +1,8 @@
+title: saloon-js
+description: Build beautiful API integrations and SDKs — a TypeScript port of SaloonPHP.
+theme: jekyll-theme-cayman
+# `jekyll-relative-links` (on by default on GitHub Pages) rewrites relative
+# `.md` links to their rendered `.html` paths, so the same links work both in
+# the repo file browser and on the published site. No local build is required —
+# GitHub builds the site for you. Enable via: Settings → Pages → Deploy from a
+# branch → branch `main`, folder `/docs`.
