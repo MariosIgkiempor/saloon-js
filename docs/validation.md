@@ -60,9 +60,9 @@ const res = await send(api, getUser('1'));
 res.dto().email; // string — inferred from the schema
 ```
 
-> **Why no `zod` dependency?** saloon-js only knows the vendor-neutral `~standard`
-> interface. Bring whichever library you like (or none — a plain function works);
-> saloon-js never imports it.
+> **Bring your own validator.** saloon-js has no dependency on any validation
+> library — it only knows the vendor-neutral `~standard` interface. Use whichever
+> library you like, or a plain function; nothing is imported on your behalf.
 
 ## Reading the result
 

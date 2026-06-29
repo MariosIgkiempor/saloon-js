@@ -1,8 +1,8 @@
 # github-api example
 
 A small real SDK built on `saloon-js`, ported from
-[SaloonPHP](https://github.com/saloonphp/saloon). Full vocabulary and the PHP→TS
-mapping live in [`.claude/plans/api-style.md`](../../.claude/plans/api-style.md).
+[SaloonPHP](https://github.com/saloonphp/saloon). See the [docs](../../docs/) for
+the full API.
 
 `index.ts` is exercised by the smoke test
 ([`tests/examples/githubApi.test.ts`](../../tests/examples/githubApi.test.ts)),
