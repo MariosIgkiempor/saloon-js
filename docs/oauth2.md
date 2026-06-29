@@ -103,8 +103,9 @@ auth always wins over the store.
 
 ## State validation
 
-`exchangeCode` mirrors SaloonPHP: if either `state` or `expectedState` is set and
-they differ, it throws `InvalidStateError`. Match the failure with
+`exchangeCode` mirrors SaloonPHP: it throws `InvalidStateError` only when **both**
+`state` and `expectedState` are non-empty and they differ. If either is missing or
+empty, no check is performed (matching PHP's `empty()` semantics). Match the failure with
 `isInvalidStateError(error)`. A missing/invalid OAuth config throws
 `OAuthConfigValidationError` (`isOAuthConfigValidationError`); you can validate up
 front with `validateOAuthConfig(oauth)`.

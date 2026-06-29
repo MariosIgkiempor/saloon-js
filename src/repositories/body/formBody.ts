@@ -29,7 +29,8 @@ export function formBody(data: FormData = {}): FormBody {
     toRequestBody() {
       const params = new URLSearchParams();
       for (const [key, value] of Object.entries(store)) {
-        params.set(key, String(value));
+        // Mirror PHP `http_build_query`: booleans serialize as `1`/`0`, not `true`/`false`.
+        params.set(key, typeof value === 'boolean' ? (value ? '1' : '0') : String(value));
       }
       return { body: params, contentType: 'application/x-www-form-urlencoded' };
     },

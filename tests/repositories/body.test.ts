@@ -82,6 +82,11 @@ describe('body repositories', () => {
       expect(String(body)).toBe('a=1&b=2');
     });
 
+    it('form serializes booleans as 1/0 (PHP http_build_query)', () => {
+      const { body } = formBody({ yes: true, no: false }).toRequestBody();
+      expect(String(body)).toBe('yes=1&no=0');
+    });
+
     it('multipart defers the content type to fetch (boundary)', () => {
       const { body, contentType } = multipartBody([{ name: 'a', value: '1' }]).toRequestBody();
       expect(contentType).toBeNull();
@@ -135,6 +140,31 @@ describe('body repositories', () => {
 
       const pending = createPendingRequest(connector, request);
       expect(pending.getBody()?.all()).toBe('request');
+    });
+  });
+
+  describe('Content-Type for empty bodies (PHP body-trait boot)', () => {
+    it('sets the JSON content type even when the body is empty', () => {
+      const connector = defineConnector({ baseUrl: 'https://x' });
+      const request = defineRequest({ method: Method.POST, endpoint: '/', body: jsonBody({}) });
+
+      const { init } = createPendingRequest(connector, request).createFetchRequest();
+      expect(new Headers(init.headers).get('content-type')).toBe('application/json');
+      // An empty body still sends no bytes.
+      expect(init.body).toBeUndefined();
+    });
+
+    it('still lets an explicit Content-Type header win over the body default', () => {
+      const connector = defineConnector({ baseUrl: 'https://x' });
+      const request = defineRequest({
+        method: Method.POST,
+        endpoint: '/',
+        headers: { 'Content-Type': 'application/vnd.api+json' },
+        body: jsonBody({}),
+      });
+
+      const { init } = createPendingRequest(connector, request).createFetchRequest();
+      expect(new Headers(init.headers).get('content-type')).toBe('application/vnd.api+json');
     });
   });
 });

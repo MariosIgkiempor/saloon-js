@@ -13,6 +13,11 @@ Severity key: **High** = breaks a common documented Saloon usage by default ·
 **Medium** = wrong in a real but narrower scenario · **Low** = edge case or
 API-surface gap.
 
+> **Resolution status:** H2, H5, H6, H7 and M9 are **fixed** (each marked
+> _✅ Fixed_ below) with regression tests. H1 is a *deliberate, documented*
+> divergence (`allowBaseUrlOverride` defaults to `false` on purpose) and is left
+> as-is pending a product decision. All other findings remain open.
+
 ---
 
 ## High
@@ -23,7 +28,7 @@ API-surface gap.
 - **TS:** `joinUrl(..., allowOverride = false)` only overrides when the flag is true, and `defineRequest` defaults it to `false`. So a request with a full-URL endpoint and a non-empty connector base URL produces `baseUrl + '/' + 'https://...'` — a malformed URL.
 - **Fix:** Always let an absolute-URL endpoint override (drop the gate / mirror PHP's `isValidUrl` short-circuit), or default `allowBaseUrlOverride` to `true`.
 
-### H2. Mock URL patterns miss PHP's implicit leading wildcard
+### H2. Mock URL patterns miss PHP's implicit leading wildcard — ✅ Fixed
 - **Where:** `src/faking/mockClient.ts:141-146` (`urlMatches`), used at `:46`/`:160`.
 - **PHP:** `URLHelper::matches()` = `matchesPattern(start($pattern, '*'), $value)` — every pattern is implicitly prefixed with `*`. So the canonical idiom `'github.com/*'` matches a full `https://api.github.com/...` URL.
 - **TS:** `urlMatches` anchors `^…$` with no implicit leading `*`, so `'github.com/*'` compiles to `^github\.com/.*$` and never matches a real `https://…` URL — it silently falls through to the sequence / no-mock path.
@@ -41,19 +46,19 @@ API-surface gap.
 - **TS:** All three are hardwired to status alone. This cascades into `throw()`, `toResult()`, `onError()`, `dtoOrFail()`, and the `alwaysThrowOnErrors` plugin.
 - **Fix:** Add optional `hasRequestFailed?(res): boolean | null`, `shouldThrowRequestException?(res): boolean`, and `getRequestException?(res, cause?): Error | undefined` to connector/request configs and thread them through `response.ts` with PHP precedence (`request ?? connector`).
 
-### H5. Form bodies serialize booleans as `true`/`false` instead of PHP's `1`/`0`
+### H5. Form bodies serialize booleans as `true`/`false` instead of PHP's `1`/`0` — ✅ Fixed
 - **Where:** `src/repositories/body/formBody.ts:32` (`params.set(key, String(value))`; `FormData` value type includes `boolean`).
 - **PHP:** `http_build_query(['a' => true, 'b' => false])` → `a=1&b=0`; `null` values are omitted.
 - **TS:** `String(true)` → `a=true`. Any boolean form field serializes to a value PHP would never emit, likely breaking servers expecting PHP-style encoding.
 - **Fix:** Map booleans to `'1'`/`'0'` before `params.set`.
 
-### H6. Empty body suppresses the `Content-Type` header (PHP sets it unconditionally)
+### H6. Empty body suppresses the `Content-Type` header (PHP sets it unconditionally) — ✅ Fixed
 - **Where:** `src/http/pendingRequest.ts:181-190` (content-type only applied inside `body && !body.isEmpty()`), with `jsonBody.ts:29` / `formBody.ts:34`.
 - **PHP:** The body trait's `boot…()` adds the content-type header **unconditionally** (independent of emptiness; `add()` only skips if already present). An empty `jsonBody({})` still sends `Content-Type: application/json`.
 - **TS:** An empty body sends no `Content-Type`.
 - **Fix:** Apply the body type's default content-type even when empty (add-if-absent), decoupled from the empty check.
 
-### H7. OAuth2 `validateState` throws in cases PHP allows (over-strict CSRF check)
+### H7. OAuth2 `validateState` throws in cases PHP allows (over-strict CSRF check) — ✅ Fixed
 - **Where:** `src/oauth2/authorizationCodeGrant.ts:65-68` (called at `:117`). Confirmed in source.
 - **PHP:** Throws only when **both** values are non-empty and differ: `! empty($state) && ! empty($expectedState) && $state !== $expectedState`.
 - **TS:** `(state !== undefined || expectedState !== undefined) && state !== expectedState` — throws when only one side is set (e.g. a `state` with no `expectedState`), and treats `''` differently from PHP `empty()`.
@@ -87,7 +92,7 @@ API-surface gap.
 ### M8. `refreshAccessToken` guards string tokens with the wrong trigger + error type
 - `src/oauth2/authorizationCodeGrant.ts:142-145`. PHP only throws for an `OAuthAuthenticator` whose `isNotRefreshable()` is true (`InvalidArgumentException`); a raw string token (even `''`) is sent as-is. TS throws `OAuthConfigValidationError` for any falsy refresh token, including strings. **Fix:** guard only the authenticator-object branch; use a non-config error type.
 
-### M9. `hasExpired` uses `<` where PHP uses `<=`
+### M9. `hasExpired` uses `<` where PHP uses `<=` — ✅ Fixed
 - `src/oauth2/accessTokenAuthenticator.ts:45`. A token whose `expiresAt` equals now is "live" in TS, "expired" in PHP. Affects token-store auto-refresh. **Fix:** use `<=`.
 
 ### M10. Global middleware (`Config::globalMiddleware()`) is not supported

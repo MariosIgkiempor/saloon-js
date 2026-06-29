@@ -178,15 +178,23 @@ function buildFetchRequest(pending: PendingRequest): { url: string; init: Reques
   const init: RequestInit = { method: pending.method, headers };
 
   const body = pending.getBody();
-  if (body && !body.isEmpty()) {
+  if (body) {
     const { body: requestBody, contentType } = body.toRequestBody();
-    init.body = requestBody;
+    const empty = body.isEmpty();
     if (body.kind === 'multipart') {
       // Let fetch generate `multipart/form-data; boundary=…` itself.
-      headers.delete('content-type');
-    } else if (contentType !== null && !headers.has('content-type')) {
-      // A Content-Type already set by a header wins over the body's default.
-      headers.set('Content-Type', contentType);
+      if (!empty) {
+        init.body = requestBody;
+        headers.delete('content-type');
+      }
+    } else {
+      // Only send bytes for a non-empty body, but mirror PHP's body-trait `boot()`
+      // by applying the body's default Content-Type even when empty. An explicit
+      // header still wins over the body's default.
+      if (!empty) init.body = requestBody;
+      if (contentType !== null && !headers.has('content-type')) {
+        headers.set('Content-Type', contentType);
+      }
     }
   }
 

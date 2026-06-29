@@ -137,11 +137,16 @@ function keyMatchesName(key: unknown, name: string | undefined): boolean {
   return false;
 }
 
-/** PHP `Str::is`: `*` matches any run of characters; otherwise an exact match. */
+/**
+ * PHP `URLHelper::matches`: `Str::is(Str::start($pattern, '*'), $value)`. Every
+ * pattern is implicitly prefixed with `*` (collapsing any existing leading `*`s),
+ * so the host-relative idiom `'github.com/*'` matches a full `https://…` URL.
+ * `*` then matches any run of characters (including `/`).
+ */
 export function urlMatches(pattern: string, url: string): boolean {
-  if (pattern === url) return true;
-  if (!pattern.includes('*')) return false;
-  const regex = new RegExp(`^${pattern.split('*').map(escapeRegExp).join('.*')}$`);
+  const prefixed = `*${pattern.replace(/^\*+/, '')}`;
+  if (prefixed === url) return true;
+  const regex = new RegExp(`^${prefixed.split('*').map(escapeRegExp).join('.*')}$`);
   return regex.test(url);
 }
 

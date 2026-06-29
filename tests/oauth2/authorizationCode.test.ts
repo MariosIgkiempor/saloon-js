@@ -93,6 +93,15 @@ describe('exchangeCode', () => {
     });
     expect(auth.accessToken).toBe('ok');
   });
+
+  it('does not throw when only one side of the state is set (PHP empty() semantics)', async () => {
+    const mock = createMockClient(
+      new Map([['oauthAccessToken', mockResponse({ access_token: 'ok' })]]),
+    );
+    // PHP only throws when BOTH state and expectedState are non-empty and differ.
+    const auth = await exchangeCode(oauthConnector(mock), 'code', { state: 'present' });
+    expect(auth.accessToken).toBe('ok');
+  });
 });
 
 describe('refreshAccessToken', () => {

@@ -42,7 +42,8 @@ export function getExpiresAt(auth: OAuthAuthenticator): Date | undefined {
 
 /** True only when an `expiresAt` is set and lies in the past (PHP `hasExpired`). */
 export function hasExpired(auth: OAuthAuthenticator): boolean {
-  return auth.expiresAt instanceof Date && auth.expiresAt.getTime() < Date.now();
+  // PHP uses `<=`: a token expiring exactly now counts as expired.
+  return auth.expiresAt instanceof Date && auth.expiresAt.getTime() <= Date.now();
 }
 
 export function hasNotExpired(auth: OAuthAuthenticator): boolean {
