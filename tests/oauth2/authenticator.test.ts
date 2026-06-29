@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   accessTokenAuth,
   deserializeAuth,
@@ -10,6 +10,10 @@ import {
 } from '@/oauth2/accessTokenAuthenticator';
 
 describe('accessTokenAuth', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('adds a bearer Authorization header', () => {
     const auth = accessTokenAuth({ accessToken: 'abc123' });
     const headers: Record<string, string> = {};
@@ -40,6 +44,14 @@ describe('accessTokenAuth', () => {
 
   it('is never expired without an expiry', () => {
     expect(hasExpired(accessTokenAuth({ accessToken: 'a' }))).toBe(false);
+  });
+
+  it('treats an expiry exactly at now as expired (PHP uses <=)', () => {
+    const instant = new Date('2030-06-01T00:00:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(instant);
+    const auth = accessTokenAuth({ accessToken: 'a', expiresAt: instant });
+    expect(hasExpired(auth)).toBe(true);
   });
 
   it('is refreshable only with a non-empty refresh token', () => {

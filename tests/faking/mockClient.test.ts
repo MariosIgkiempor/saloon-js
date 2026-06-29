@@ -59,6 +59,16 @@ describe('createMockClient — matching', () => {
     expect(expectOk(res.json())).toEqual({ who: 'url' });
   });
 
+  it('matches a host-relative pattern against the full URL (PHP implicit leading wildcard)', async () => {
+    // PHP `URLHelper::matches` prepends an implicit `*`, so `'api.example.com/*'`
+    // matches `https://api.example.com/users/99` despite the scheme prefix.
+    const mock = createMockClient(
+      new Map<unknown, MockValue>([['api.example.com/*', mockResponse({ who: 'host-relative' })]]),
+    );
+    const res = await send(api, getUser('99'), { mockClient: mock });
+    expect(expectOk(res.json())).toEqual({ who: 'host-relative' });
+  });
+
   it('falls back to the sequence in order', async () => {
     const mock = createMockClient([mockResponse({ n: 1 }), mockResponse({ n: 2 })]);
     const r1 = await send(api, getUser('1'), { mockClient: mock });

@@ -61,9 +61,13 @@ function generateState(): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-/** PHP `validateState`: throw if either value is set and they differ. */
+/**
+ * PHP `validateState`: throw only when **both** the returned state and the
+ * expected state are non-empty and differ (`! empty($state) && ! empty($expectedState)
+ * && $state !== $expectedState`). If either is missing/empty, PHP does not throw.
+ */
 function validateState(state?: string, expectedState?: string): void {
-  if ((state !== undefined || expectedState !== undefined) && state !== expectedState) {
+  if (state && expectedState && state !== expectedState) {
     throw new InvalidStateError('OAuth2 state does not match the expected state (possible CSRF).');
   }
 }

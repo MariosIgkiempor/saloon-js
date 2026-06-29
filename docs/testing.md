@@ -39,10 +39,15 @@ const mock = createMockClient(new Map([
   ['getUser', mockResponse({ who: 'by-name' })],             // by request name
   ['api', mockResponse({ who: 'connector' })],               // by connector name
   ['https://api.example.com/users/*', mockResponse({})],     // by URL wildcard
+  ['api.example.com/*', mockResponse({})],                   // host-relative also works
 ]));
 ```
 
 Match priority: request name → connector name → URL pattern → sequence.
+
+URL patterns carry an implicit leading `*` (as in SaloonPHP), so a host-relative
+pattern like `'api.example.com/*'` matches the full `https://api.example.com/…`
+URL — you don't need to spell out the scheme. `*` matches any run of characters.
 
 ## Make a mock fail
 
