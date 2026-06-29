@@ -14,7 +14,6 @@ import {
   isNotFoundError,
   Method,
   mockResponse,
-  type Response,
   send,
   tokenAuth,
 } from '@/index';
@@ -32,13 +31,13 @@ const gitHub = (token: string) =>
   });
 
 const getRepo = (owner: string, repo: string) =>
-  defineRequest<Repo>({
+  defineRequest({
     method: Method.GET,
     endpoint: `/repos/${owner}/${repo}`,
-    dto: (r: Response): Repo => ({
-      fullName: r.json<string>('full_name'),
-      stars: r.json<number>('stargazers_count'),
-    }),
+    validator: (data): Repo => {
+      const raw = data as Record<string, unknown>;
+      return { fullName: raw.full_name as string, stars: raw.stargazers_count as number };
+    },
   });
 
 describe('examples/github-api quickstart', () => {

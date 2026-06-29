@@ -10,8 +10,11 @@
 import type { Connector } from '@/contracts/Connector';
 import type { Request } from '@/contracts/Request';
 import type { Response } from '@/contracts/Response';
+import type { Validator } from '@/contracts/Validator';
 import { createRequestError, type RequestError } from '@/errors/RequestError';
+import { ValidationError } from '@/errors/ValidationError';
 import type { PendingRequest } from '@/http/pendingRequest';
+import { runValidator } from '@/http/validation';
 import { createArrayStore } from '@/repositories/arrayStore';
 import { err, isErr, ok as okResult, type Result } from '@/result';
 
@@ -49,6 +52,28 @@ export async function responseFromFetch(
       }
     }
     return parsed;
+  };
+
+  // The validator (request wins; connector is the fallback) and a one-time memo
+  // for its outcome — shared by `validate`/`validateAsync`/`dto`, and by `send`'s
+  // eager validation, so the body is validated at most once.
+  const validator = (pending.getRequest().validator ?? pending.getConnector().validator) as
+    | Validator<unknown>
+    | undefined;
+  let validationMemo: Result<unknown, ValidationError> | undefined;
+
+  // Parse the body for validation; malformed JSON is itself a validation failure.
+  const parseForValidation = (): Result<unknown, ValidationError> => {
+    const parsedBody = parse();
+    if (isErr(parsedBody)) {
+      return err(
+        new ValidationError([{ message: 'Response body is not valid JSON' }], {
+          value: bodyText,
+          cause: parsedBody.error,
+        }),
+      );
+    }
+    return okResult(parsedBody.value);
   };
 
   const status = res.status;
@@ -89,9 +114,48 @@ export async function responseFromFetch(
       if (failed()) throw createRequestError(response);
       return response;
     },
+    validate: (): Result<unknown, ValidationError> => {
+      if (validationMemo !== undefined) return validationMemo;
+      const parsed = parseForValidation();
+      if (isErr(parsed)) {
+        validationMemo = parsed;
+        return parsed;
+      }
+      if (!validator) {
+        validationMemo = parsed;
+        return parsed;
+      }
+      const outcome = runValidator(validator, parsed.value);
+      if (outcome instanceof Promise) {
+        // An async validator can't resolve here — surface that without memoizing,
+        // so a later `validateAsync()` can still run it.
+        return err(
+          new ValidationError([
+            { message: 'Validator is asynchronous; use validateAsync() or await send()' },
+          ]),
+        );
+      }
+      validationMemo = outcome;
+      return outcome;
+    },
+    validateAsync: async (): Promise<Result<unknown, ValidationError>> => {
+      if (validationMemo !== undefined) return validationMemo;
+      const parsed = parseForValidation();
+      if (isErr(parsed)) {
+        validationMemo = parsed;
+        return parsed;
+      }
+      if (!validator) {
+        validationMemo = parsed;
+        return parsed;
+      }
+      validationMemo = await runValidator(validator, parsed.value);
+      return validationMemo;
+    },
     dto: () => {
-      const caster = pending.getRequest().dto ?? pending.getConnector().dto;
-      return caster?.(response);
+      const result = response.validate();
+      if (isErr(result)) throw result.error;
+      return result.value;
     },
     dtoOrFail: () => {
       if (failed()) throw createRequestError(response);

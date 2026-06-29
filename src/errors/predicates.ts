@@ -6,6 +6,7 @@
 import { FatalRequestError } from '@/errors/FatalRequestError';
 import type { RequestError, RequestErrorKind } from '@/errors/RequestError';
 import { SaloonError } from '@/errors/SaloonError';
+import { ValidationError } from '@/errors/ValidationError';
 
 export function isSaloonError(error: unknown): error is SaloonError {
   return error instanceof SaloonError;
@@ -13,6 +14,10 @@ export function isSaloonError(error: unknown): error is SaloonError {
 
 export function isFatalRequestError(error: unknown): error is FatalRequestError {
   return error instanceof FatalRequestError;
+}
+
+export function isValidationError(error: unknown): error is ValidationError {
+  return error instanceof ValidationError;
 }
 
 // We can't `instanceof RequestError` without importing the class value, which we

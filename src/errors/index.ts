@@ -22,6 +22,7 @@ export {
   isTooManyRequestsError,
   isUnauthorizedError,
   isUnprocessableEntityError,
+  isValidationError,
 } from '@/errors/predicates';
 export {
   createRequestError,
@@ -29,3 +30,4 @@ export {
   type RequestErrorKind,
 } from '@/errors/RequestError';
 export { SaloonError } from '@/errors/SaloonError';
+export { ValidationError, type ValidationErrorOptions } from '@/errors/ValidationError';

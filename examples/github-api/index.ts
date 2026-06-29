@@ -20,7 +20,6 @@ import {
   isErr,
   isNotFoundError,
   Method,
-  type Response,
   send,
   tokenAuth,
   withQuery,
@@ -46,33 +45,36 @@ const gitHub = (token: string) =>
   });
 
 // ---------------------------------------------------------------------------
-// Requests — factories returning config. The generic on `defineRequest` threads
-// the DTO type through to `response.dto()`. `dto` maps the wire shape into your
-// domain type; `response.json(key)` reads a single field.
+// Requests — factories returning config. `validator` both validates the response
+// body and types it: `defineRequest` infers the response type from it, so
+// `response.dto()` is typed without an explicit generic. A `validator` is either
+// a function (it returns the typed value, or throws on invalid) or any Standard
+// Schema (Zod/Valibot/ArkType — see docs/validation.md). `send` runs it
+// automatically; an invalid body throws a `ValidationError`.
 // ---------------------------------------------------------------------------
 
 const getRepo = (owner: string, repo: string) =>
-  defineRequest<Repo>({
+  defineRequest({
     method: Method.GET,
     endpoint: `/repos/${owner}/${repo}`,
-    dto: (r: Response): Repo => ({
-      fullName: r.json<string>('full_name'),
-      stars: r.json<number>('stargazers_count'),
-      url: r.json<string>('html_url'),
-    }),
+    validator: (data): Repo => {
+      const raw = data as Record<string, unknown>;
+      return {
+        fullName: raw.full_name as string,
+        stars: raw.stargazers_count as number,
+        url: raw.html_url as string,
+      };
+    },
   });
 
 const listUserRepos = (username: string, perPage = 30) =>
-  defineRequest<Repo[]>({
+  defineRequest({
     method: Method.GET,
     endpoint: `/users/${username}/repos`,
     query: { per_page: perPage },
-    // `json()` with no key returns a `Result` (it never throws on malformed
-    // JSON); unwrap it explicitly before mapping the array.
-    dto: (r: Response): Repo[] => {
-      const body = r.json<Array<Record<string, unknown>>>();
-      if (isErr(body)) return [];
-      return body.value.map((raw) => ({
+    validator: (data): Repo[] => {
+      if (!Array.isArray(data)) throw new Error('expected an array of repos');
+      return data.map((raw: Record<string, unknown>) => ({
         fullName: raw.full_name as string,
         stars: raw.stargazers_count as number,
         url: raw.html_url as string,
