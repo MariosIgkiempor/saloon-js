@@ -43,42 +43,46 @@ const createUser = (name: string) =>
   });
 ```
 
-## DTOs — typed results
+## Validation — typed results
 
-Give `defineRequest` a `TDto` type parameter and a `dto` caster to turn a raw
-response into a typed object. `response.dto()` runs the caster; `dtoOrFail()`
-throws a `RequestError` first if the response `failed()`.
+Add a `validator` to a request and the response type is **inferred** from it —
+no explicit type argument. `send` runs it automatically against a successful
+response and throws a `ValidationError` if the body doesn't match; `response.dto()`
+returns the validated, typed value.
+
+A validator is **either** a plain function (it returns the typed value, or throws
+on invalid) **or** any [Standard Schema](https://standardschema.dev) — Zod,
+Valibot, ArkType, … (saloon-js has **no dependency** on any of them):
 
 ```ts
-import { defineRequest, send, isOk, Method } from 'saloon-js';
+import { defineRequest, send, Method } from 'saloon-js';
+import { z } from 'zod';
 
-interface User { id: string; email: string }
-
+// 1) A Standard Schema (Zod here):
+const User = z.object({ id: z.string(), email: z.string().email() });
 const getUser = (id: string) =>
-  defineRequest<User>({
+  defineRequest({ method: Method.GET, endpoint: `/users/${id}`, validator: User });
+
+// 2) Or a plain function — `data` is typed `unknown`:
+const getUserFn = (id: string) =>
+  defineRequest({
     method: Method.GET,
     endpoint: `/users/${id}`,
-    dto: (res) => {
-      const body = res.json<User>();
-      if (!isOk(body)) throw body.error;
-      return body.value;
+    validator: (data): { id: string; email: string } => {
+      const u = data as Record<string, unknown>;
+      if (typeof u.id !== 'string') throw new Error('id must be a string');
+      return { id: u.id, email: String(u.email) };
     },
   });
 
-const res = await send(api, getUser('1'));
-res.dto().email;       // string — typed as User
-res.dtoOrFail().id;    // same, but throws on a 4xx/5xx response
+const res = await send(api, getUser('1')); // throws ValidationError if invalid
+res.dto().email;    // string — inferred from the validator
 ```
 
-A connector-level `dto` acts as the fallback for any request that doesn't define
-its own:
-
-```ts
-defineConnector({ baseUrl, dto: (res) => /* … */ });
-```
-
-When neither the request nor the connector defines a `dto`, `dto()` returns
-`undefined`.
+See [Validation](validation.md) for the full surface (`validate()`,
+`validateAsync()`, async schemas) and the Standard Schema rationale. A
+connector-level `validator` is the fallback for any request that defines none.
+With no validator, `dto()` returns the parsed body untyped (`unknown`).
 
 ## Per-call tweaks
 

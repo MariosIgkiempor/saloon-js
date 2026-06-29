@@ -1,5 +1,4 @@
-// Public barrel. Slice 1 exports the GET round-trip surface; later slices add to
-// this (a curated, tree-shakeable barrel is finalized in Slice 8).
+// Public barrel — the curated, tree-shakeable surface re-exported as `saloon-js`.
 
 export { basicAuth, headerAuth, multiAuth, queryAuth, tokenAuth } from '@/auth';
 export type {
@@ -15,6 +14,8 @@ export type {
   Fixture,
   HeadersConfig,
   HeaderValue,
+  InferStandardOutput,
+  InferValidated,
   MergeableBody,
   MiddlewareRegistrar,
   MockClient,
@@ -33,6 +34,10 @@ export type {
   RetryHandler,
   Sender,
   SentMatcher,
+  StandardSchemaIssue,
+  StandardSchemaV1,
+  Validator,
+  ValidatorFn,
 } from '@/contracts';
 export { Method, PipeOrder } from '@/enums';
 export {
@@ -57,10 +62,13 @@ export {
   isTooManyRequestsError,
   isUnauthorizedError,
   isUnprocessableEntityError,
+  isValidationError,
   OAuthConfigValidationError,
   RequestError,
   type RequestErrorKind,
   SaloonError,
+  ValidationError,
+  type ValidationErrorOptions,
 } from '@/errors';
 export {
   createMockClient,

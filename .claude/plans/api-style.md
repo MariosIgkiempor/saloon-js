@@ -28,14 +28,14 @@ const gitHub = (token: string) =>
   });
 
 const getRepo = (owner: string, repo: string) =>
-  defineRequest<Repo>({
+  defineRequest({
     method: Method.GET,
     endpoint: `/repos/${owner}/${repo}`,
-    dto: (res) => res.json(),
+    validator: repoSchema, // a function or any Standard Schema; infers `Request<Repo>`
   });
 
 const res = await send(gitHub(token), getRepo('saloonphp', 'saloon'));
-const repo = res.dto();
+const repo = res.dto(); // Repo — validated + inferred (see .claude/plans/data-validation.md)
 ```
 
 See `examples/github-api/functional.ts` for the worked reference, including the
@@ -118,7 +118,7 @@ if (response.failed()) { /* inspect 4xx/5xx — no throw */ }
 Catching the network error still works via `isFatalRequestError` (and the broader
 `isSaloonError`); `instanceof` remains available. The previously-planned thrown
 status hierarchy (`isNotFoundError`, `createRequestError`, …) is dropped in favor
-of `Result` + response inspection — see `slice-3-errors-response-reading.md`.
+of `Result` + response inspection — see `docs/error-handling.md`.
 
 ## Immutability & state
 

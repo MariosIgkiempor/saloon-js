@@ -5,12 +5,12 @@
 // sender, then run the response pipeline. Transport failures feed the fatal
 // pipeline.
 //
-// Slice 5 wraps that single attempt in the retry loop: up to `tries` attempts,
-// optional (exponential) `retryInterval` between them, a per-error `handleRetry`
-// gate, and `throwOnMaxTries` to choose between throwing and returning the last
-// failed response when retries run out. When `tries > 1`, a failed *status* is
-// forced down the retry path via `response.throw()`. Discrimination is via the
-// Slice-3 predicates, never `instanceof`.
+// A retry loop wraps that single attempt: up to `tries` attempts, optional
+// (exponential) `retryInterval` between them, a per-error `handleRetry` gate, and
+// `throwOnMaxTries` to choose between throwing and returning the last failed
+// response when retries run out. When `tries > 1`, a failed *status* is forced down
+// the retry path via `response.throw()`. Discrimination is via the error predicates,
+// never `instanceof`.
 
 import type { Connector } from '@/contracts/Connector';
 import type { Request } from '@/contracts/Request';
@@ -21,6 +21,7 @@ import { createFakeResponse } from '@/faking/createFakeResponse';
 import { sleep } from '@/helpers/sleep';
 import { createPendingRequest, type SendOptions } from '@/http/pendingRequest';
 import { resolveTokenStoreAuth } from '@/oauth2/tokenStore';
+import { isErr } from '@/result';
 
 interface SendFn {
   <TDto = unknown>(
@@ -85,6 +86,15 @@ async function attempt<TDto>(
   // With retries enabled, a failed status must enter the retry path: surface it as
   // a thrown RequestError (a no-op on a successful response).
   if (forceThrow) response.throw();
+
+  // Eager validation: on a *successful* response carrying a validator, validate the
+  // body and throw the ValidationError on failure (the second deliberate exception
+  // to "send throws only the network error"). Failed statuses are never validated
+  // against the success type. The result is memoized for later `dto()`/`validate()`.
+  if ((request.validator ?? connector.validator) !== undefined && response.successful()) {
+    const validation = await response.validateAsync();
+    if (isErr(validation)) throw validation.error;
+  }
 
   return response as Response<TDto>;
 }

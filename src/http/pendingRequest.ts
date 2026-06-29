@@ -1,12 +1,11 @@
 // Port of ../saloon/src/Http/PendingRequest.php (URL/method/header/query/body build
 // + the boot/auth/middleware lifecycle).
 //
-// The one intentionally-mutable object: created per `send()`, never shared. Slice 2
-// introduced the explicit tap sequence; Slice 4 extends it to the full lifecycle
-// (boot plugins → merge properties → merge body → authenticate → boot
-// connector/request) and gives the pending request a middleware pipeline. The
-// *async* request pipeline itself is executed by `send` (the async orchestrator),
-// after which the sender — or, from Slice 6, a stashed fake response — produces the
+// The one intentionally-mutable object: created per `send()`, never shared. It runs
+// the explicit tap sequence of the full lifecycle (boot plugins → merge properties →
+// merge body → authenticate → boot connector/request) and carries a middleware
+// pipeline. The *async* request pipeline itself is executed by `send` (the async
+// orchestrator), after which the sender — or a stashed fake response — produces the
 // Response.
 
 import type { Authenticator } from '@/contracts/Authenticator';
@@ -87,7 +86,7 @@ export interface PendingRequest {
   /** The merged body, set by the MergeBody tap. */
   getBody(): BodyRepository | undefined;
   setBody(body: BodyRepository | undefined): void;
-  /** A fake response stashed by a request pipe (the mock path lands in Slice 6). */
+  /** A fake response stashed by a request pipe (the mock path). */
   setFakeResponse(fake: FakeResponse): void;
   getFakeResponse(): FakeResponse | undefined;
   hasFakeResponse(): boolean;

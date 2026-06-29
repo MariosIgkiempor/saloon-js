@@ -1,6 +1,7 @@
 // The normalized request value (out of `defineRequest`) and its input config.
-// `TDto` threads the DTO type through to `response.dto()` (wired in Slice 7); in
-// Slice 1 it is carried but otherwise inert.
+// `TDto` is the validated response type: it is inferred from the request's
+// `validator` (see `defineRequest`) and threaded through to `response.dto()` /
+// `response.validate()`.
 
 import type { BodyRepository } from '@/contracts/BodyRepository';
 import type {
@@ -18,7 +19,7 @@ import type {
 } from '@/contracts/Connector';
 import type { MockClient } from '@/contracts/MockClient';
 import type { Plugin } from '@/contracts/Plugin';
-import type { Response } from '@/contracts/Response';
+import type { Validator } from '@/contracts/Validator';
 import type { Method } from '@/enums';
 import type { ArrayStore } from '@/repositories/arrayStore';
 
@@ -48,11 +49,12 @@ export interface Request<TDto = unknown> {
   // Milliseconds to delay before sending (applied by the delay middleware).
   delay?: number;
   allowBaseUrlOverride: boolean;
-  // Casts this request's response into `TDto` (read by `Response.dto()`); a
-  // connector-level `dto` is the fallback when this is absent. The param is the
-  // base `Response` (the cast happens in the callback) so that, e.g., a
-  // `Request<User>` stays assignable to `Request<unknown>`.
-  dto?: (response: Response) => TDto;
+  // Validates + casts this request's response body into `TDto`, run automatically
+  // by `send` and read by `response.validate()`/`dto()`. A function (throws on
+  // invalid) or any Standard Schema. A connector-level `validator` is the fallback
+  // when this is absent. Covariant in `TDto`, so a `Request<User>` stays assignable
+  // to `Request<unknown>`.
+  validator?: Validator<TDto>;
   name?: string;
 }
 
@@ -77,6 +79,6 @@ export interface RequestConfig<TDto = unknown> {
   handleRetry?: RetryHandler;
   delay?: number;
   allowBaseUrlOverride?: boolean;
-  dto?: (response: Response) => TDto;
+  validator?: Validator<TDto>;
   name?: string;
 }

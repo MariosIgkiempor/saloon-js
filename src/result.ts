@@ -4,9 +4,9 @@
 //
 // The one deliberate exception to "don't throw" is the network failure
 // (`FatalRequestError`), which `send` throws so that `await` and `Promise.all`
-// reject the way callers expect. See `.claude/plans/api-style.md` for the policy.
+// reject the way callers expect.
 //
-// Slice 3 promotes this to the public barrel: `response.toResult()` returns a
+// This type is part of the public barrel: `response.toResult()` returns a
 // `Result<Response, RequestError>`, so consumers need `isOk`/`isErr` (and the
 // type) to discriminate the failure value without throwing.
 

@@ -89,7 +89,7 @@ describe('per-status predicates', () => {
   });
 });
 
-describe('Slice 1 predicates still work alongside the new ones', () => {
+describe('base predicates still work alongside the new ones', () => {
   it('isSaloonError / isFatalRequestError', () => {
     const fatal = new FatalRequestError(new Error('refused'), {} as never);
     expect(isFatalRequestError(fatal)).toBe(true);

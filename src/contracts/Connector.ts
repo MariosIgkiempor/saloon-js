@@ -1,21 +1,16 @@
 // The normalized connector value (out of `defineConnector`) and its input config.
-// Only the members the lifecycle reads so far are declared; later slices extend
-// these with `retry`/`oauth`/`tokens`/`mockClient`/….
 
 import type { Authenticator } from '@/contracts/Authenticator';
 import type { BodyRepository } from '@/contracts/BodyRepository';
 import type { MockClient } from '@/contracts/MockClient';
 import type { Plugin } from '@/contracts/Plugin';
-import type { Response } from '@/contracts/Response';
 import type { Sender } from '@/contracts/Sender';
+import type { Validator } from '@/contracts/Validator';
 import type { MiddlewarePipeline } from '@/helpers/middlewarePipeline';
 import type { PendingRequest } from '@/http/pendingRequest';
 import type { OAuthConfig } from '@/oauth2/oauthConfig';
 import type { TokenStore } from '@/oauth2/tokenStore';
 import type { ArrayStore } from '@/repositories/arrayStore';
-
-/** Connector-level DTO fallback: casts any response when a request defines no `dto`. */
-export type DtoCaster = (response: Response) => unknown;
 
 export type HeaderValue = string | number | boolean;
 export type QueryValue = string | number | boolean;
@@ -79,11 +74,11 @@ export interface Connector {
   handleRetry?: RetryHandler;
   // Milliseconds to delay before sending (applied by the delay middleware).
   delay?: number;
-  // OAuth2 config + token store (Slice 7); read by the grant functions and `send`.
+  // OAuth2 config + token store; read by the grant functions and `send`.
   oauth?: OAuthConfig;
   tokens?: TokenStore;
-  // Connector-level DTO fallback, used when a request defines no `dto`.
-  dto?: DtoCaster;
+  // Connector-level validator fallback, used when a request defines no `validator`.
+  validator?: Validator<unknown>;
   sender: Sender;
   name?: string;
 }
@@ -109,7 +104,7 @@ export interface ConnectorConfig {
   delay?: number;
   oauth?: OAuthConfig;
   tokens?: TokenStore;
-  dto?: DtoCaster;
+  validator?: Validator<unknown>;
   sender?: Sender;
   name?: string;
 }

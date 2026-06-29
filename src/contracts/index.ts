@@ -25,3 +25,12 @@ export type { Plugin } from '@/contracts/Plugin';
 export type { Request, RequestConfig } from '@/contracts/Request';
 export type { Response } from '@/contracts/Response';
 export type { Sender } from '@/contracts/Sender';
+export type {
+  InferStandardInput,
+  InferStandardOutput,
+  StandardSchemaIssue,
+  StandardSchemaProps,
+  StandardSchemaResult,
+  StandardSchemaV1,
+} from '@/contracts/StandardSchema';
+export type { InferValidated, Validator, ValidatorFn } from '@/contracts/Validator';

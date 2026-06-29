@@ -1,9 +1,9 @@
 // Port of ../saloon/src/Contracts/FakeResponse.php (the contract only).
 //
-// Slice 4 introduced this thin so the middleware pipeline could recognise a fake
-// response returned from a request pipe. Slice 6 fills in the producers
-// (`mockResponse`/`fixture`), the `createFakeResponse` materializer, and the
-// optional `getError` hook a `mockResponse().throw()` uses to reject the send.
+// A thin contract so the middleware pipeline can recognise a fake response returned
+// from a request pipe. The producers (`mockResponse`/`fixture`), the
+// `createFakeResponse` materializer, and the optional `getError` hook a
+// `mockResponse().throw()` uses to reject the send all build on it.
 //
 // PHP distinguished a fake response with `instanceof`; interfaces have no runtime
 // identity, so a `FakeResponse` is marked with a symbol brand and detected with

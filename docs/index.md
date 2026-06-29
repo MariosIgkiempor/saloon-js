@@ -37,8 +37,9 @@ Requires Node ≥ 22. ESM-first with a CJS build; ships its own types.
 
 - [Getting started](getting-started.md) — your first connector, request, and send
 - [Connectors](connectors.md) — base URL, default headers/query, auth, plugins
-- [Requests](requests.md) — methods, dynamic endpoints, DTOs, per-call tweaks
+- [Requests](requests.md) — methods, dynamic endpoints, validation, per-call tweaks
 - [Responses](responses.md) — reading status, JSON, headers; success predicates
+- [Validation](validation.md) — typed results from a validator function or Zod-style schema
 - [Authentication](authentication.md) — token, basic, header, query, multi
 - [OAuth2](oauth2.md) — authorization code & client credentials grants, token store
 - [Request body](request-body.md) — JSON, form, multipart, string, stream
@@ -63,9 +64,11 @@ primitives for advanced use and for building your own pieces:
   `pending.delay`. See [Retries, delay & pooling](resilience.md#delay).
 - `createMiddlewarePipeline` — the request/response/fatal pipeline used by
   [`withMiddleware`](plugins.md#ad-hoc-middleware).
-- `RequestError` / `SaloonError` / `FatalRequestError` classes and
-  `createRequestError` — the throwable error types. See
+- `RequestError` / `SaloonError` / `FatalRequestError` / `ValidationError`
+  classes and `createRequestError` — the throwable error types. See
   [Error handling](error-handling.md).
+- `Validator` / `ValidatorFn` / `StandardSchemaV1` types — for typing your own
+  validators or accepting any Standard Schema. See [Validation](validation.md).
 
 Types for every config object are exported too (`ConnectorConfig`,
 `RequestConfig`, `Authenticator`, `Plugin`, `Sender`, `MockClient`, …).

@@ -55,6 +55,29 @@ response.throw(); // throws RequestError when failed(), else returns the respons
 
 See [Error handling](error-handling.md) for the error types and predicates.
 
+## Validated body
+
+When the request (or connector) defines a [`validator`](requests.md#validation--typed-results),
+`send` validates a successful response automatically. You can also read the
+result off the response:
+
+```ts
+import { isOk } from 'saloon-js';
+
+response.dto();             // the validated value (throws ValidationError if invalid)
+response.dtoOrFail();       // throws RequestError first if failed(), else dto()
+
+// Return-based (never throws):
+const r = response.validate();        // Result<TDto, ValidationError>
+if (isOk(r)) use(r.value);
+
+// For asynchronous schemas (a validator whose validate returns a Promise):
+const ra = await response.validateAsync();
+```
+
+With no validator configured, `validate()`/`dto()` pass the parsed body through
+untyped (`unknown`). See [Validation](validation.md) for details.
+
 ## Escape hatches
 
 ```ts

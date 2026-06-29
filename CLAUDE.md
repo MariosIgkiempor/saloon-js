@@ -41,8 +41,12 @@ pnpm test               # vitest run
 pnpm lint               # biome check
 ```
 
-## Implementation roadmap
-Plans are organized as **vertical slices** (each ends in a runnable, tested
-request), not horizontal layers. Index: `.claude/plans/slices.md`; slices live in
-`.claude/plans/slice-1-get-roundtrip.md` … `slice-8-polish.md`. Cross-cutting API
-decisions: `.claude/plans/api-style.md`.
+## Plans & design docs
+The initial build was delivered as **vertical slices** (each ended in a runnable,
+tested request); that roadmap is complete and its slice files have been removed.
+Current design docs live in `.claude/plans/`:
+- `api-style.md` — cross-cutting API style (functional, no classes; return-based errors).
+- `data-validation.md` — the `validator` + type-inference feature (function or
+  Standard Schema; auto-validation on `send`).
+
+Add a new design doc here when starting a feature beyond the original port.

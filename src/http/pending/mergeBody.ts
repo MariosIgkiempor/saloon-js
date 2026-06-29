@@ -9,7 +9,7 @@
 //
 // Unlike SaloonPHP (which throws when the kinds differ), we never throw here:
 // per the error policy the request body simply wins on a mismatch, consistent
-// with the request-wins precedence everywhere else. See `.claude/plans/api-style.md`.
+// with the request-wins precedence everywhere else.
 
 import type { BodyRepository } from '@/contracts/BodyRepository';
 import type { Connector } from '@/contracts/Connector';

@@ -1,10 +1,8 @@
 // Port of ../saloon/src/Repositories/ArrayStore.php
 //
-// A factory closing over a private `Record<string, T>` rather than a class. Only
-// the methods Slice 1 needs are present; `has`/`add`/`remove`/`isEmpty`/… are
-// added by the slice that first uses each. The store is literal — header
-// case-insensitivity is handled at the PendingRequest/FetchSender boundary, not
-// here.
+// A factory closing over a private `Record<string, T>` rather than a class. The
+// store is literal — header case-insensitivity is handled at the
+// PendingRequest/FetchSender boundary, not here.
 
 export interface ArrayStore<T = unknown> {
   /** A snapshot of every entry (a copy — mutating it never touches the store). */

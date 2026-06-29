@@ -1,8 +1,8 @@
 # github-api example
 
 A small real SDK built on `saloon-js`, ported from
-[SaloonPHP](https://github.com/saloonphp/saloon). Full vocabulary and the PHP→TS
-mapping live in [`.claude/plans/api-style.md`](../../.claude/plans/api-style.md).
+[SaloonPHP](https://github.com/saloonphp/saloon). See the [docs](../../docs/) for
+the full API.
 
 `index.ts` is exercised by the smoke test
 ([`tests/examples/githubApi.test.ts`](../../tests/examples/githubApi.test.ts)),
@@ -12,9 +12,10 @@ so it always tracks the shipped public API.
 
 - **`defineConnector(config)`** — one per API. Config owns `baseUrl`, `headers`,
   `auth`, and `plugins`. Returns a reusable connector value.
-- **`defineRequest<TDto>(config)`** — one per endpoint. Config declares `method`,
-  `endpoint`, and optionally `query`, a `body`, and a `dto` mapper. Usually
-  wrapped in your own factory function for parameters.
+- **`defineRequest(config)`** — one per endpoint. Config declares `method`,
+  `endpoint`, and optionally `query`, a `body`, and a `validator` (a function or
+  any Standard Schema) that types + validates the response. Usually wrapped in
+  your own factory function for parameters.
 - **`send(connector, request)`** — resolves to a `Response`
   (`.status()`, `.json()`, `.dto()`, `.failed()`, `.toResult()`).
 - **Authenticators / bodies / plugins** — factories: `tokenAuth(...)`,
@@ -31,14 +32,17 @@ const gitHub = (token: string) =>
   });
 
 const getRepo = (owner: string, repo: string) =>
-  defineRequest<Repo>({
+  defineRequest({
     method: Method.GET,
     endpoint: `/repos/${owner}/${repo}`,
-    dto: (r) => ({ fullName: r.json('full_name'), stars: r.json('stargazers_count') }),
+    validator: (data): Repo => {
+      const raw = data as Record<string, unknown>;
+      return { fullName: raw.full_name as string, stars: raw.stargazers_count as number };
+    },
   });
 
 const res = await send(gitHub(token), getRepo('saloonphp', 'saloon'));
-const repo = res.dto(); // Repo
+const repo = res.dto(); // Repo — inferred from the validator
 ```
 
 ## Errors are values

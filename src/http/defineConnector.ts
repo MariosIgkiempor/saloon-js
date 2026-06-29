@@ -32,7 +32,7 @@ export function defineConnector(config: ConnectorConfig): Connector {
     delay: config.delay,
     oauth: config.oauth,
     tokens: config.tokens,
-    dto: config.dto,
+    validator: config.validator,
     sender: config.sender ?? getDefaultSender(),
     name: config.name,
   };
