@@ -1,20 +1,23 @@
 # github-api example
 
-A **hallucinated** sketch of the `saloon-js` API — written before the library
-exists, to design the public surface we want. The API is **functional (no
-classes)**; behavior is still ported from
-[SaloonPHP](https://github.com/saloonphp/saloon) (`../saloon`). Full vocabulary
-and the PHP→TS mapping live in [`.claude/plans/api-style.md`](../../.claude/plans/api-style.md).
+A small real SDK built on `saloon-js`. The API is **functional (no classes)**;
+behavior is ported from [SaloonPHP](https://github.com/saloonphp/saloon). Full
+vocabulary and the PHP→TS mapping live in
+[`.claude/plans/api-style.md`](../../.claude/plans/api-style.md).
+
+`index.ts` is exercised by the smoke test
+([`tests/examples/githubApi.test.ts`](../../tests/examples/githubApi.test.ts)),
+so it always tracks the shipped public API.
 
 ## The shape
 
 - **`defineConnector(config)`** — one per API. Config owns `baseUrl`, `headers`,
-  and `auth`. Returns a reusable connector value.
+  `auth`, and `plugins`. Returns a reusable connector value.
 - **`defineRequest<TDto>(config)`** — one per endpoint. Config declares `method`,
   `endpoint`, and optionally `query`, a `body`, and a `dto` mapper. Usually
   wrapped in your own factory function for parameters.
 - **`send(connector, request)`** — free function; resolves to a `Response`
-  (`.status()`, `.json()`, `.dto()`, `.failed()`).
+  (`.status()`, `.json()`, `.dto()`, `.failed()`, `.toResult()`).
 - **Authenticators / bodies / plugins** — factories: `tokenAuth(...)`,
   `jsonBody(...)`, `acceptsJson()`, etc.
 - **Per-call tweaks** — `withHeaders` / `withQuery` / `withAuth` transformers
@@ -22,34 +25,36 @@ and the PHP→TS mapping live in [`.claude/plans/api-style.md`](../../.claude/pl
 
 ```ts
 const gitHub = (token: string) =>
-  defineConnector({ baseUrl: 'https://api.github.com', auth: tokenAuth(token) });
+  defineConnector({
+    baseUrl: 'https://api.github.com',
+    auth: tokenAuth(token),
+    plugins: [acceptsJson()],
+  });
 
-const listUserRepos = (username: string) =>
-  defineRequest<Repo[]>({ method: Method.GET, endpoint: `/users/${username}/repos` });
+const getRepo = (owner: string, repo: string) =>
+  defineRequest<Repo>({
+    method: Method.GET,
+    endpoint: `/repos/${owner}/${repo}`,
+    dto: (r) => ({ fullName: r.json('full_name'), stars: r.json('stargazers_count') }),
+  });
 
-const response = await send(gitHub(token), listUserRepos('saloonphp'));
-const repos = response.dto(); // Repo[]
+const res = await send(gitHub(token), getRepo('saloonphp', 'saloon'));
+const repo = res.dto(); // Repo
 ```
 
-`index.ts` also sketches the OAuth2 authorization-code flow two ways — pure
-token threading vs. an injected `tokens: { load, save }` store (the functional
-answer to "where does the refreshing token live?").
+## Errors are values
 
-## Open design questions
+4xx/5xx do not throw. Read the failure with `toResult()` and narrow it with a
+predicate:
 
-- Everything is a `Promise` (no PHP sync/`sendAsync` split) — confirmed direction.
-- `withX` transformers as the per-call override surface — is the set
-  (`withHeaders/withQuery/withConfig/withBody/withAuth/withMiddleware`) complete?
-- Generic `defineRequest<TDto>` to thread the DTO type through to
-  `response.dto()` — worth it on every request factory? (Leaning yes.)
-- OAuth state: standardize on the `tokens` store, or also keep pure threading as
-  a first-class path? (`index.ts` shows both.)
+```ts
+const result = res.toResult();
+if (isErr(result) && isNotFoundError(result.error)) console.error('no such repo');
+```
 
 ## Run
 
 ```bash
 pnpm install
-GITHUB_TOKEN=... pnpm start
+GITHUB_TOKEN=… pnpm start
 ```
-
-Won't run until the API is actually implemented — it's a design target.

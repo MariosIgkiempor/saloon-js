@@ -20,11 +20,14 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "test:unit": "vitest run",
     "test:watch": "vitest watch",
-    "test:lint": "biome check .",
-    "test:everything": "pnpm test:unit && pnpm test:lint && pnpm typecheck",
+    "lint": "biome check .",
     "lint:fix": "biome check . --write",
+    "format": "biome format --write .",
+    "test:lint": "biome check .",
+    "test:everything": "pnpm test && pnpm lint && pnpm typecheck",
     "build": "tsdown",
     "prepublishOnly": "pnpm build"
   },
@@ -33,7 +36,11 @@
     "sdk",
     "api",
     "api-integrations",
-    "http-client"
+    "http-client",
+    "typescript",
+    "fetch",
+    "rest",
+    "oauth2"
   ],
   "author": "Mario Igkiempor",
   "license": "MIT",
@@ -60,6 +67,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
     "@types/node": "^25.9.3",
+    "rolldown": "~1.1.1",
     "tsdown": "^0.22.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
