@@ -20,15 +20,18 @@ import type { Method } from '@/enums';
 import { getGlobalMockClient } from '@/faking/mockClient';
 import { createMiddlewarePipeline, type MiddlewarePipeline } from '@/helpers/middlewarePipeline';
 import { joinUrl } from '@/helpers/urlHelper';
+import { delayMiddleware } from '@/http/middleware/delay';
 import { determineMockResponse } from '@/http/middleware/determineMockResponse';
 import { validateProperties } from '@/http/middleware/validateProperties';
 import { authenticate } from '@/http/pending/authenticate';
 import { bootConnectorAndRequest } from '@/http/pending/bootConnectorAndRequest';
 import { bootPlugins } from '@/http/pending/bootPlugins';
 import { mergeBody } from '@/http/pending/mergeBody';
+import { mergeDelay } from '@/http/pending/mergeDelay';
 import { mergeRequestProperties } from '@/http/pending/mergeRequestProperties';
 import { responseFromFetch } from '@/http/response';
 import { type ArrayStore, createArrayStore } from '@/repositories/arrayStore';
+import { createIntegerStore, type IntegerStore } from '@/repositories/integerStore';
 
 /** Per-call options threaded into `send` (and on to the pending request). */
 export interface SendOptions {
@@ -49,6 +52,7 @@ const TAPS: Tap[] = [
   bootPlugins,
   mergeRequestProperties,
   mergeBody,
+  mergeDelay,
   authenticate,
   bootConnectorAndRequest,
 ];
@@ -59,6 +63,8 @@ export interface PendingRequest {
   headers: ArrayStore<HeaderValue>;
   query: ArrayStore<QueryValue>;
   config: ArrayStore<ConfigValue>;
+  /** Milliseconds to delay before sending, set by the MergeDelay tap (null = none). */
+  delay: IntegerStore;
   /** This send's request/response/fatal middleware pipeline. */
   middleware: MiddlewarePipeline;
   getConnector(): Connector;
@@ -111,6 +117,7 @@ export function createPendingRequest<TDto>(
     headers: createArrayStore<HeaderValue>(),
     query: createArrayStore<QueryValue>(),
     config: createArrayStore<ConfigValue>(),
+    delay: createIntegerStore(),
     middleware: createMiddlewarePipeline(),
     getConnector: () => connector,
     getRequest: () => request,
@@ -138,6 +145,9 @@ export function createPendingRequest<TDto>(
   // stash a fake response that short-circuits the sender.
   pending.middleware.onRequest(determineMockResponse, 'determineMockResponse');
   pending.middleware.onRequest(validateProperties, 'validateProperties');
+  // Registered last so the delay is awaited after every other request pipe has
+  // settled the pending request (mirrors PHP's DelayMiddleware ordering).
+  pending.middleware.onRequest(delayMiddleware, 'delay');
 
   return pending;
 }

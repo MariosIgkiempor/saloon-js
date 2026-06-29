@@ -43,6 +43,7 @@ Requires Node ≥ 22. ESM-first with a CJS build; ships its own types.
 - [Authentication](authentication.md) — token, basic, header, query, multi
 - [Request body](request-body.md) — JSON, form, multipart, string, stream
 - [Plugins](plugins.md) — `acceptsJson`, `hasTimeout`, `alwaysThrowOnErrors`
+- [Retries, delay & pooling](resilience.md) — `tries`/`withRetry`, `delay`, `pool`
 - [Error handling](error-handling.md) — return-based errors vs. throwing
 - [Testing](testing.md) — mock clients, fake responses, recorded fixtures
 
@@ -58,6 +59,8 @@ primitives for advanced use and for building your own pieces:
 - `createArrayStore` / `ArrayStore` — the case-folding key/value store backing
   headers, query, and config (you meet it as `pending.headers`,
   `response.headers()`, etc.).
+- `createIntegerStore` / `IntegerStore` — the nullable-integer store backing
+  `pending.delay`. See [Retries, delay & pooling](resilience.md#delay).
 - `createMiddlewarePipeline` — the request/response/fatal pipeline used by
   [`withMiddleware`](plugins.md#ad-hoc-middleware).
 - `RequestError` / `SaloonError` / `FatalRequestError` classes and

@@ -29,6 +29,8 @@ export type {
   RequestConfig,
   RequestOptionsConfig,
   Response,
+  RetryConfig,
+  RetryHandler,
   Sender,
   SentMatcher,
 } from '@/contracts';
@@ -77,6 +79,15 @@ export {
 export { defineConnector } from '@/http/defineConnector';
 export { defineRequest } from '@/http/defineRequest';
 export type { PendingRequest, ResponseFactory, SendOptions } from '@/http/pendingRequest';
+export {
+  type Pool,
+  type PoolErrorHandler,
+  type PoolKey,
+  type PoolOptions,
+  type PoolRequests,
+  type PoolResponseHandler,
+  pool,
+} from '@/http/pool';
 export { send } from '@/http/send';
 export { createFetchSender, fetchSender } from '@/http/senders/fetchSender';
 export {
@@ -86,6 +97,7 @@ export {
   withHeaders,
   withMiddleware,
   withQuery,
+  withRetry,
 } from '@/http/transformers';
 export {
   acceptsJson,
@@ -106,4 +118,5 @@ export {
   streamBody,
   stringBody,
 } from '@/repositories/body';
+export { createIntegerStore, type IntegerStore } from '@/repositories/integerStore';
 export { err, isErr, isOk, ok, type Result } from '@/result';

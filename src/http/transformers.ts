@@ -11,6 +11,7 @@ import type {
   MiddlewareRegistrar,
   QueryConfig,
   RequestOptionsConfig,
+  RetryConfig,
 } from '@/contracts/Connector';
 import type { Request } from '@/contracts/Request';
 import { createArrayStore } from '@/repositories/arrayStore';
@@ -51,6 +52,11 @@ export function withBody<T extends Target>(
 /** Override the authenticator for a single call (beats connector/request auth). */
 export function withAuth<T extends Target>(target: T, auth: AuthValue): T {
   return Object.freeze({ ...target, auth }) as unknown as T;
+}
+
+/** Patch the retry knobs for a single call (e.g. `withRetry(req, { tries: 5 })`). */
+export function withRetry<T extends Target>(target: T, patch: RetryConfig): T {
+  return Object.freeze({ ...target, ...patch }) as unknown as T;
 }
 
 /** Register ad-hoc middleware for a single call (composed after any existing). */
