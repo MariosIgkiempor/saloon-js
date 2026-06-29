@@ -18,11 +18,11 @@ import type {
 } from '@/contracts/Connector';
 import type { MockClient } from '@/contracts/MockClient';
 import type { Plugin } from '@/contracts/Plugin';
+import type { Response } from '@/contracts/Response';
 import type { Method } from '@/enums';
 import type { ArrayStore } from '@/repositories/arrayStore';
 
 /** The normalized, frozen request produced by `defineRequest`. */
-// biome-ignore lint/correctness/noUnusedVariables: TDto threads the DTO type to dto() (wired in Slice 7).
 export interface Request<TDto = unknown> {
   method: Method;
   endpoint: string | ((request: Request) => string);
@@ -48,11 +48,15 @@ export interface Request<TDto = unknown> {
   // Milliseconds to delay before sending (applied by the delay middleware).
   delay?: number;
   allowBaseUrlOverride: boolean;
+  // Casts this request's response into `TDto` (read by `Response.dto()`); a
+  // connector-level `dto` is the fallback when this is absent. The param is the
+  // base `Response` (the cast happens in the callback) so that, e.g., a
+  // `Request<User>` stays assignable to `Request<unknown>`.
+  dto?: (response: Response) => TDto;
   name?: string;
 }
 
 /** The input accepted by `defineRequest`. */
-// biome-ignore lint/correctness/noUnusedVariables: TDto threads the DTO type to dto() (wired in Slice 7).
 export interface RequestConfig<TDto = unknown> {
   method: Method;
   endpoint: string | ((request: Request) => string);
@@ -73,5 +77,6 @@ export interface RequestConfig<TDto = unknown> {
   handleRetry?: RetryHandler;
   delay?: number;
   allowBaseUrlOverride?: boolean;
+  dto?: (response: Response) => TDto;
   name?: string;
 }

@@ -30,6 +30,9 @@ export function defineConnector(config: ConnectorConfig): Connector {
     throwOnMaxTries: config.throwOnMaxTries,
     handleRetry: config.handleRetry,
     delay: config.delay,
+    oauth: config.oauth,
+    tokens: config.tokens,
+    dto: config.dto,
     sender: config.sender ?? getDefaultSender(),
     name: config.name,
   };

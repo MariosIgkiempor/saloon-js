@@ -48,3 +48,8 @@ const dateAuth: Authenticator = {
   set: (pending) => pending.headers.add('X-Date', new Date().toUTCString()),
 };
 ```
+
+## OAuth2
+
+For the Authorization Code and Client Credentials grants — plus an automatic
+token store — see [OAuth2](oauth2.md).

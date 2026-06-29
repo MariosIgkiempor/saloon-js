@@ -20,6 +20,7 @@ import type { RequestError } from '@/errors/RequestError';
 import { createFakeResponse } from '@/faking/createFakeResponse';
 import { sleep } from '@/helpers/sleep';
 import { createPendingRequest, type SendOptions } from '@/http/pendingRequest';
+import { resolveTokenStoreAuth } from '@/oauth2/tokenStore';
 
 interface SendFn {
   <TDto = unknown>(
@@ -93,6 +94,11 @@ async function sendRequest<TDto = unknown>(
   request: Request<TDto>,
   options: SendOptions = {},
 ): Promise<Response<TDto>> {
+  // When the connector carries a token store, load/refresh/save the authenticator
+  // and thread it in as this call's auth (no-op without a store, or when auth is
+  // already supplied / `skipTokenStore` is set by the internal grant requests).
+  options = await resolveTokenStoreAuth(connector, request, options);
+
   const maxTries = request.tries ?? connector.tries ?? 1;
   const interval = request.retryInterval ?? connector.retryInterval ?? 0;
   const backoff = request.useExponentialBackoff ?? connector.useExponentialBackoff ?? false;

@@ -26,6 +26,7 @@ export function defineRequest<TDto = unknown>(config: RequestConfig<TDto>): Requ
     handleRetry: config.handleRetry,
     delay: config.delay,
     allowBaseUrlOverride: config.allowBaseUrlOverride ?? false,
+    dto: config.dto,
     name: config.name,
   };
 
