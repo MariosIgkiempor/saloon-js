@@ -33,6 +33,13 @@ interface SendFn {
   ): <TDto = unknown>(request: Request<TDto>, options?: SendOptions) => Promise<Response<TDto>>;
 }
 
+// Errors injected by a mock's `.throw()` are user-authored, not real failures, so
+// the retry loop must let them escape immediately. We tag them here rather than by
+// type, because the default `.throw()` error is an ordinary `RequestError` —
+// indistinguishable by type from a real failed-status error. A WeakSet avoids
+// mutating (possibly frozen) error objects.
+const fakeThrownErrors = new WeakSet<object>();
+
 /** A single send attempt: build → request pipeline → sender/fake → response pipeline. */
 async function attempt<TDto>(
   connector: Connector,
@@ -63,9 +70,13 @@ async function attempt<TDto>(
   // Record before any throw, so mock assertions still see the round-trip.
   mockClient?.recordResponse(pending, response);
 
-  // A mock marked via `.throw()` rejects here (after recording).
+  // A mock marked via `.throw()` rejects here (after recording). Tag it so the
+  // retry loop treats it as terminal, never retrying a user-injected failure.
   const fakeError = pending.getFakeResponse()?.getError?.(pending, response);
-  if (fakeError) throw fakeError;
+  if (fakeError) {
+    if (typeof fakeError === 'object') fakeThrownErrors.add(fakeError);
+    throw fakeError;
+  }
 
   // Response pipes may replace the response or throw (e.g. `alwaysThrowOnErrors`).
   response = await pending.middleware.executeResponsePipeline(response);
@@ -94,7 +105,9 @@ async function sendRequest<TDto = unknown>(
     try {
       return await attempt(connector, request, options, maxTries > 1);
     } catch (error) {
-      // A non-Saloon error (or a fake `.throw()`) escapes immediately — never retried.
+      // A fake `.throw()` (even when its default error is a RequestError) and any
+      // non-Saloon error escape immediately — never retried.
+      if (typeof error === 'object' && error !== null && fakeThrownErrors.has(error)) throw error;
       if (!isFatalRequestError(error) && !isRequestError(error)) throw error;
       lastError = error;
 

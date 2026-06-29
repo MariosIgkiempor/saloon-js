@@ -6,6 +6,16 @@ import { type PoolKey, pool } from '@/http/pool';
 import { alwaysThrowOnErrors } from '@/plugins';
 import { startTestServer, type TestServer } from './support/testServer';
 
+/** Run `promise`, returning the rejection reason (or failing if it resolves). */
+async function rejectionOf(promise: Promise<unknown>): Promise<unknown> {
+  try {
+    await promise;
+  } catch (error) {
+    return error;
+  }
+  throw new Error('Expected the promise to reject, but it resolved');
+}
+
 describe('pool', () => {
   let server: TestServer;
 
@@ -55,6 +65,51 @@ describe('pool', () => {
 
     expect(oks).toEqual([0]);
     expect(errs).toEqual([1]);
+  });
+
+  it('does not route a throwing onResponse handler to onError', async () => {
+    const connector = defineConnector({ baseUrl: server.url });
+    const errs: PoolKey[] = [];
+
+    const error = await rejectionOf(
+      pool(connector, {
+        requests: [defineRequest({ method: Method.GET, endpoint: '/status/200' })],
+        onResponse: () => {
+          throw new Error('response handler boom');
+        },
+        onError: (_reason, key) => errs.push(key),
+      }).send(),
+    );
+
+    expect((error as Error).message).toBe('response handler boom');
+    expect(errs).toEqual([]); // a successful request must never reach onError
+  });
+
+  it('rejects (and stops) when the request source throws', async () => {
+    const connector = defineConnector({ baseUrl: server.url });
+    function* generate() {
+      yield defineRequest({ method: Method.GET, endpoint: '/concurrent?ms=10' });
+      throw new Error('source boom');
+    }
+
+    const error = await rejectionOf(pool(connector, { requests: generate, concurrency: 1 }).send());
+
+    expect((error as Error).message).toBe('source boom');
+  });
+
+  it('rejects when an onError handler throws', async () => {
+    const connector = defineConnector({ baseUrl: server.url, plugins: [alwaysThrowOnErrors()] });
+
+    const error = await rejectionOf(
+      pool(connector, {
+        requests: [defineRequest({ method: Method.GET, endpoint: '/status/500' })],
+        onError: () => {
+          throw new Error('error handler boom');
+        },
+      }).send(),
+    );
+
+    expect((error as Error).message).toBe('error handler boom');
   });
 
   it('pulls requests lazily from a generator at send time', async () => {

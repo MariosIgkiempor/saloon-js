@@ -65,6 +65,9 @@ await send(api, slow); // waits 1000ms, then sends
 Internally the delay is held in an `IntegerStore` on the pending request
 (`pending.delay`) and awaited by a request-pipeline middleware. `0` and unset
 both mean "no delay" (PHP `empty()` semantics, the same quirk used for bodies).
+The delay is **skipped for mocked responses** (the mock path never hits the
+network), so tests against a [mock client](testing.md) stay instant even when a
+`delay` is configured.
 
 ## Pooling
 
@@ -91,6 +94,9 @@ await pool(api, {
 - `onError` fires when a send throws — i.e. a transport failure, or any failed
   status when retries/`alwaysThrowOnErrors` cause `send()` to throw. A failed
   status that `send()` returns as a value reaches `onResponse`.
+- A throwing handler (`onResponse`, `onError`) or a throwing request source stops
+  the pool: in-flight sends finish, no further requests are pulled, and `send()`
+  rejects with that error. A handler error is never re-routed to `onError`.
 
 The controller also exposes builder methods (each returns the controller):
 

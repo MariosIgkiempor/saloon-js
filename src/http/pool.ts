@@ -85,21 +85,54 @@ export function pool(connector: Connector, options: PoolOptions): Pool {
         return result;
       };
 
+      // The first fatal error (a throwing source iterator or a throwing
+      // onResponse/onError handler) stops the pool: workers finish their in-flight
+      // send, then drain out, and `send()` rejects with it. A *request* failure is
+      // not fatal — it is routed to `onError` and the pool keeps going.
+      let failure: { error: unknown } | undefined;
+
       const worker = async (): Promise<void> => {
         for (;;) {
-          const item = await pull();
-          if (item === null) return;
+          if (failure) return;
+
+          let item: { request: Request; key: PoolKey } | null;
           try {
-            const response = await send(connector, item.request);
-            await onResponse?.(response, item.key);
+            item = await pull();
+          } catch (error) {
+            // Pulling from the source threw (e.g. a throwing generator).
+            failure ??= { error };
+            return;
+          }
+          if (item === null) return;
+
+          let response: Awaited<ReturnType<typeof send>>;
+          try {
+            response = await send(connector, item.request);
           } catch (reason) {
-            await onError?.(reason, item.key);
+            // A failed send → onError. The handler itself throwing is fatal.
+            try {
+              await onError?.(reason, item.key);
+            } catch (error) {
+              failure ??= { error };
+              return;
+            }
+            continue;
+          }
+
+          // Success → onResponse, outside the send try so a throwing handler is
+          // never misreported to onError.
+          try {
+            await onResponse?.(response, item.key);
+          } catch (error) {
+            failure ??= { error };
+            return;
           }
         }
       };
 
       const width = Math.max(1, typeof concurrency === 'function' ? concurrency() : concurrency);
       await Promise.all(Array.from({ length: width }, () => worker()));
+      if (failure) throw failure.error;
     },
   };
 

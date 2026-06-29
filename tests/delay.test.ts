@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { MockValue } from '@/contracts/MockClient';
 import { Method } from '@/enums';
+import { createMockClient } from '@/faking/mockClient';
+import { mockResponse } from '@/faking/mockResponse';
 import { defineConnector } from '@/http/defineConnector';
 import { defineRequest } from '@/http/defineRequest';
 import { send } from '@/http/send';
@@ -55,6 +58,25 @@ describe('delay middleware', () => {
     await promise;
 
     expect((stamp.at as number) - start).toBe(200);
+  });
+
+  it('skips the delay entirely for a mocked response', async () => {
+    // Fake timers are installed but never advanced; if the delay ran, the send
+    // would hang on sleep(10_000). The mock path must not sleep.
+    vi.useFakeTimers();
+    const mock = createMockClient(
+      new Map<unknown, MockValue>([['getThing', mockResponse({ ok: true })]]),
+    );
+    const connector = defineConnector({
+      baseUrl: 'https://api.example.com',
+      name: 'api',
+      delay: 10_000,
+    });
+    const request = defineRequest({ method: Method.GET, endpoint: '/thing', name: 'getThing' });
+
+    const response = await send(connector, request, { mockClient: mock });
+
+    expect(response.status()).toBe(200);
   });
 
   it('no delay sends immediately', async () => {

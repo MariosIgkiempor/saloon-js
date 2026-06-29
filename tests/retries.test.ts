@@ -1,6 +1,9 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { MockValue } from '@/contracts/MockClient';
 import { Method } from '@/enums';
 import { isFatalRequestError, isNotFoundError, isRequestError, isServerError } from '@/errors';
+import { createMockClient } from '@/faking/mockClient';
+import { mockResponse } from '@/faking/mockResponse';
 import { defineConnector } from '@/http/defineConnector';
 import { defineRequest } from '@/http/defineRequest';
 import { send } from '@/http/send';
@@ -155,6 +158,26 @@ describe('retries (timing & transport)', () => {
     const response = await promise;
     expect(response.status()).toBe(503);
     expect(calls.map((t) => t - start)).toEqual([0, 200, 600]);
+  });
+
+  it('does not retry a fake .throw() — it escapes immediately', async () => {
+    // A keyed mock is reusable, so if the default .throw() (a RequestError) were
+    // retried, every attempt would re-serve it and the send would record `tries`
+    // round-trips before failing. It should escape after a single attempt instead.
+    const mock = createMockClient(
+      new Map<unknown, MockValue>([['getThing', mockResponse({ error: true }, 503).throw()]]),
+    );
+    const connector = defineConnector({
+      baseUrl: 'https://api.example.com',
+      name: 'api',
+      tries: 3,
+    });
+    const request = defineRequest({ method: Method.GET, endpoint: '/thing', name: 'getThing' });
+
+    const error = await rejectionOf(send(connector, request, { mockClient: mock }));
+
+    expect(isRequestError(error)).toBe(true);
+    expect(mock.getRecordedResponses()).toHaveLength(1);
   });
 
   it('runs the fatal pipeline on each transport failure, then throws', async () => {
