@@ -5,12 +5,12 @@
 // sender, then run the response pipeline. Transport failures feed the fatal
 // pipeline.
 //
-// Slice 5 wraps that single attempt in the retry loop: up to `tries` attempts,
-// optional (exponential) `retryInterval` between them, a per-error `handleRetry`
-// gate, and `throwOnMaxTries` to choose between throwing and returning the last
-// failed response when retries run out. When `tries > 1`, a failed *status* is
-// forced down the retry path via `response.throw()`. Discrimination is via the
-// Slice-3 predicates, never `instanceof`.
+// A retry loop wraps that single attempt: up to `tries` attempts, optional
+// (exponential) `retryInterval` between them, a per-error `handleRetry` gate, and
+// `throwOnMaxTries` to choose between throwing and returning the last failed
+// response when retries run out. When `tries > 1`, a failed *status* is forced down
+// the retry path via `response.throw()`. Discrimination is via the error predicates,
+// never `instanceof`.
 
 import type { Connector } from '@/contracts/Connector';
 import type { Request } from '@/contracts/Request';

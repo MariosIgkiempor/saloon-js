@@ -3,7 +3,7 @@
 // Zero dependencies — built on Node's `node:http`. Start one per test file in
 // `beforeAll` and `await server.close()` in `afterAll`. It records and echoes
 // everything it receives, plus a few routes and instrumentation that together
-// cover every slice's needs:
+// cover the test suite's needs:
 //
 //   *               → 200, echoes { method, path, query, headers, body, rawBody }
 //   /status/:code   → responds with that status + a nested JSON error body

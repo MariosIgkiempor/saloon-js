@@ -1,5 +1,5 @@
 // Predicate helpers for the OAuth2 errors — the primary discrimination API
-// (the Slice-3 carve-out: throwables stay classes, but are matched via predicates).
+// (the error-type carve-out: throwables stay classes, but are matched via predicates).
 
 import { InvalidStateError } from '@/errors/oauth/InvalidStateError';
 import { OAuthConfigValidationError } from '@/errors/oauth/OAuthConfigValidationError';

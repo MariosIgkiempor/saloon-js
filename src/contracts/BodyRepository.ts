@@ -1,9 +1,9 @@
 // Port of ../saloon/src/Contracts/Body/BodyRepository.php
 //
-// The body contract, introduced in Slice 2. Each body type is a factory
-// (`jsonBody`, `formBody`, …) returning a `BodyRepository` — a plain object
-// closing over its data, mirroring the `createArrayStore` pattern. Methods return
-// `BodyRepository<T>` (not `this`) to match the store convention from Slice 1.
+// The body contract. Each body type is a factory (`jsonBody`, `formBody`, …)
+// returning a `BodyRepository` — a plain object closing over its data, mirroring
+// the `createArrayStore` pattern. Methods return `BodyRepository<T>` (not `this`)
+// to match the store convention.
 //
 // `kind` is a string discriminant that replaces PHP's "same class" identity check
 // (`$connectorBody instanceof $requestBody`) in MergeBody.

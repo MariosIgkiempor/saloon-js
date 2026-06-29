@@ -1,6 +1,4 @@
 // The normalized connector value (out of `defineConnector`) and its input config.
-// Only the members the lifecycle reads so far are declared; later slices extend
-// these with `retry`/`oauth`/`tokens`/`mockClient`/….
 
 import type { Authenticator } from '@/contracts/Authenticator';
 import type { BodyRepository } from '@/contracts/BodyRepository';
@@ -76,7 +74,7 @@ export interface Connector {
   handleRetry?: RetryHandler;
   // Milliseconds to delay before sending (applied by the delay middleware).
   delay?: number;
-  // OAuth2 config + token store (Slice 7); read by the grant functions and `send`.
+  // OAuth2 config + token store; read by the grant functions and `send`.
   oauth?: OAuthConfig;
   tokens?: TokenStore;
   // Connector-level validator fallback, used when a request defines no `validator`.

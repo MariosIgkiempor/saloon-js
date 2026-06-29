@@ -1,4 +1,4 @@
-// Body repository factories (Slice 2). Each is a factory returning a
+// Body repository factories. Each is a factory returning a
 // `BodyRepository`; json/form/multipart are also `MergeableBody`.
 
 export { type FormBody, type FormData, formBody } from '@/repositories/body/formBody';

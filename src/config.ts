@@ -1,8 +1,7 @@
 // Port of ../saloon/src/Config.php (default sender slot + default timeouts)
 //
-// Global config as functions, with no module-init side effects. Slice 1 needs
-// only the default sender; the default timeouts the fetch sender falls back to
-// (Slice 4) are here too; the global mock slot (Slice 6) is added by that slice.
+// Global config as functions, with no module-init side effects: the default
+// sender and the default timeouts the fetch sender falls back to.
 
 import type { Sender } from '@/contracts/Sender';
 import { fetchSender } from '@/http/senders/fetchSender';

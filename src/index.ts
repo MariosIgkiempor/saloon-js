@@ -1,5 +1,4 @@
-// Public barrel. Slice 1 exports the GET round-trip surface; later slices add to
-// this (a curated, tree-shakeable barrel is finalized in Slice 8).
+// Public barrel — the curated, tree-shakeable surface re-exported as `saloon-js`.
 
 export { basicAuth, headerAuth, multiAuth, queryAuth, tokenAuth } from '@/auth';
 export type {

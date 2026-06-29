@@ -10,7 +10,7 @@
 //   - a request pipe may mutate the pending request in place and return void,
 //     return a replacement PendingRequest, or return a FakeResponse — the last
 //     stashes the fake on the pending and short-circuits the real sender (the
-//     mock/fake materialization itself lands in Slice 6);
+//     mock/fake materialization itself lives in the faking module);
 //   - a response pipe may return a replacement Response or void (pass through);
 //   - a fatal pipe observes a transport error.
 //

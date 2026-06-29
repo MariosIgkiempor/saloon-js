@@ -103,7 +103,7 @@ describe('connector → request precedence', () => {
   });
 
   describe('config', () => {
-    // Config is not transmitted in this slice, so precedence is verified on the
+    // Config is not transmitted over the wire, so precedence is verified on the
     // merged pending request reachable from the response.
     it('merges connector + request, request winning', async () => {
       const connector = defineConnector({

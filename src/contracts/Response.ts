@@ -79,7 +79,7 @@ export interface Response<TDto = unknown> {
   getConnector(): Connector;
   /** The underlying native fetch `Response`. */
   getFetchResponse(): globalThis.Response;
-  /** True when this response came from a mock client / fixture (Slice 6). */
+  /** True when this response came from a mock client / fixture. */
   isMocked(): boolean;
   /** True when this response was served from a cache (set by caching, later). */
   isCached(): boolean;
