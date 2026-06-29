@@ -1,7 +1,7 @@
 # Connectors
 
 A connector is one-per-API config produced by `defineConnector`. It returns a
-frozen, reusable value (no class). Every field except `baseUrl` is optional.
+frozen, reusable value. Every field except `baseUrl` is optional.
 
 ```ts
 import { defineConnector, tokenAuth, acceptsJson, Method } from 'saloon-js';

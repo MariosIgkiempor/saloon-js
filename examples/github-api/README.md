@@ -1,9 +1,8 @@
 # github-api example
 
-A small real SDK built on `saloon-js`. The API is **functional (no classes)**;
-behavior is ported from [SaloonPHP](https://github.com/saloonphp/saloon). Full
-vocabulary and the PHP→TS mapping live in
-[`.claude/plans/api-style.md`](../../.claude/plans/api-style.md).
+A small real SDK built on `saloon-js`, ported from
+[SaloonPHP](https://github.com/saloonphp/saloon). Full vocabulary and the PHP→TS
+mapping live in [`.claude/plans/api-style.md`](../../.claude/plans/api-style.md).
 
 `index.ts` is exercised by the smoke test
 ([`tests/examples/githubApi.test.ts`](../../tests/examples/githubApi.test.ts)),
@@ -16,12 +15,12 @@ so it always tracks the shipped public API.
 - **`defineRequest<TDto>(config)`** — one per endpoint. Config declares `method`,
   `endpoint`, and optionally `query`, a `body`, and a `dto` mapper. Usually
   wrapped in your own factory function for parameters.
-- **`send(connector, request)`** — free function; resolves to a `Response`
+- **`send(connector, request)`** — resolves to a `Response`
   (`.status()`, `.json()`, `.dto()`, `.failed()`, `.toResult()`).
 - **Authenticators / bodies / plugins** — factories: `tokenAuth(...)`,
   `jsonBody(...)`, `acceptsJson()`, etc.
 - **Per-call tweaks** — `withHeaders` / `withQuery` / `withAuth` transformers
-  (return a new value) instead of subclassing.
+  return a new value with the patch applied.
 
 ```ts
 const gitHub = (token: string) =>

@@ -1,9 +1,8 @@
 # saloon-js
 
 Build beautiful API integrations and SDKs. A TypeScript port of
-[SaloonPHP](https://github.com/saloonphp/saloon) with a **functional, class-free
-API**: you describe a *connector* (one per API) and *requests* (one per
-endpoint) as plain config, then call `send()`.
+[SaloonPHP](https://github.com/saloonphp/saloon): you describe a *connector* (one
+per API) and *requests* (one per endpoint) as plain config, then call `send()`.
 
 ```bash
 pnpm add saloon-js   # npm i / yarn add also work
@@ -87,8 +86,8 @@ res.json<string>('user.name', 'anon');   // dot-path read with a fallback
 ## Precedence and per-call tweaks
 
 Request config is merged over connector config (request wins). For one-off
-overrides, the `withX` transformers return a **new** value rather than mutating —
-composition instead of subclassing:
+overrides, the `withX` transformers return a **new** value rather than mutating
+the original:
 
 ```ts
 import { withHeaders, withQuery, withConfig, withBody, withAuth, withRetry, withMiddleware } from 'saloon-js';
@@ -295,11 +294,10 @@ available.
 
 ## Divergences from SaloonPHP
 
-- **Functional, not class-based.** No `class extends Connector`; connectors and
-  requests are values from `defineConnector`/`defineRequest`, behavior is invoked
-  with free functions. Free functions tree-shake far better than class methods.
+- **No base classes to extend.** Connectors and requests are values from
+  `defineConnector`/`defineRequest`, not subclasses of a `Connector`/`Request`.
 - **Plugins are an explicit array**, not PHP traits.
-- **Per-call overrides compose** via `withX` transformers instead of subclassing.
+- **Per-call overrides** use `withX` transformers instead of subclassing.
 - **Async only** — everything returns a `Promise`; there is no sync/`sendAsync`
   split.
 - **Buffered response bodies** — the body is read once and cached.

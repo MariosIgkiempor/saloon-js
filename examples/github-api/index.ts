@@ -1,11 +1,9 @@
 /**
- * saloon-js — GitHub API example (the functional API, for real this time).
+ * saloon-js — GitHub API example.
  *
- * No classes: a connector and a request are plain config produced by factory
- * functions (`defineConnector` / `defineRequest`); `send()` is a free function
- * instead of a method. PHP's `default*()` override points become fields on the
- * config object, and per-request tweaks happen via `withX` transformers rather
- * than subclassing. See `.claude/plans/api-style.md`.
+ * A connector and a request are plain config produced by `defineConnector` /
+ * `defineRequest`; PHP's `default*()` override points become fields on the
+ * config object, and per-request tweaks happen via `withX` transformers.
  *
  * Everything here imports from the published barrel (`saloon-js`) and tracks the
  * real, shipped API — the same surface the README quickstart and the smoke test
@@ -35,9 +33,8 @@ interface Repo {
 }
 
 // ---------------------------------------------------------------------------
-// Connector — a value, not a class. `defineConnector` normalizes the config and
-// hands back a reusable object. `auth` and `plugins` are config fields, not
-// traits or method overrides.
+// Connector — `defineConnector` normalizes the config and hands back a reusable
+// object. `auth` and `plugins` are config fields.
 // ---------------------------------------------------------------------------
 
 const gitHub = (token: string) =>
@@ -50,8 +47,8 @@ const gitHub = (token: string) =>
 
 // ---------------------------------------------------------------------------
 // Requests — factories returning config. The generic on `defineRequest` threads
-// the DTO type through to `response.dto()` without a class. `dto` maps the wire
-// shape into your domain type; `response.json(key)` reads a single field.
+// the DTO type through to `response.dto()`. `dto` maps the wire shape into your
+// domain type; `response.json(key)` reads a single field.
 // ---------------------------------------------------------------------------
 
 const getRepo = (owner: string, repo: string) =>
@@ -84,9 +81,8 @@ const listUserRepos = (username: string, perPage = 30) =>
   });
 
 // ---------------------------------------------------------------------------
-// Usage — `send(connector, request)` instead of `connector.send(request)`.
-// 4xx/5xx do not throw; obtain the failure as a value with `toResult()` and
-// narrow it with an error predicate.
+// Usage. 4xx/5xx do not throw; obtain the failure as a value with `toResult()`
+// and narrow it with an error predicate.
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
@@ -103,8 +99,8 @@ async function main(): Promise<void> {
   const repo = res.dto();
   console.log(`★ ${repo.stars.toString().padStart(6)}  ${repo.fullName}`);
 
-  // Per-call tweaks compose instead of subclassing: `withQuery` returns a new
-  // request with the patch merged over the factory's defaults.
+  // Per-call tweaks: `withQuery` returns a new request with the patch merged
+  // over the factory's defaults.
   const recent = await send(
     connector,
     withQuery(listUserRepos('saloonphp', 5), { sort: 'updated' }),

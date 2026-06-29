@@ -1,8 +1,8 @@
 # OAuth2
 
-saloon-js ships both common OAuth2 grants as **free functions** over a connector
-that carries an `oauth` config — there's no class instance to hold state, so the
-CSRF `state` and the access token are values you pass around (or hand to a
+saloon-js ships both common OAuth2 grants. You call them with a connector that
+carries an `oauth` config — there's no stateful instance to hold the tokens, so
+the CSRF `state` and the access token are values you pass around (or hand to a
 **token store** that does it for you).
 
 ```ts
