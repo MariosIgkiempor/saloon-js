@@ -11,7 +11,13 @@
 
 import type { Authenticator } from '@/contracts/Authenticator';
 import type { BodyRepository } from '@/contracts/BodyRepository';
-import type { ConfigValue, Connector, HeaderValue, QueryValue } from '@/contracts/Connector';
+import type {
+  AuthValue,
+  ConfigValue,
+  Connector,
+  HeaderValue,
+  QueryValue,
+} from '@/contracts/Connector';
 import type { FakeResponse } from '@/contracts/FakeResponse';
 import type { MockClient } from '@/contracts/MockClient';
 import type { Request } from '@/contracts/Request';
@@ -37,6 +43,10 @@ import { createIntegerStore, type IntegerStore } from '@/repositories/integerSto
 export interface SendOptions {
   /** Mock client for this call (beats request/connector/global mock clients). */
   mockClient?: MockClient;
+  /** Authenticator for this call (beats request/connector auth; set by the token store). */
+  auth?: AuthValue;
+  /** Internal: OAuth grant requests set this to bypass connector token-store resolution. */
+  skipTokenStore?: boolean;
 }
 
 export type ResponseFactory = (
@@ -99,7 +109,7 @@ export function createPendingRequest<TDto>(
   let authenticator: Authenticator | undefined;
   const resolveAuthenticator = (): Authenticator | undefined => {
     if (!authenticatorResolved) {
-      const auth = request.auth ?? connector.auth;
+      const auth = options.auth ?? request.auth ?? connector.auth;
       authenticator = typeof auth === 'function' ? auth() : auth;
       authenticatorResolved = true;
     }

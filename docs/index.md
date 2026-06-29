@@ -41,6 +41,7 @@ Requires Node ≥ 22. ESM-first with a CJS build; ships its own types.
 - [Requests](requests.md) — methods, dynamic endpoints, DTOs, per-call tweaks
 - [Responses](responses.md) — reading status, JSON, headers; success predicates
 - [Authentication](authentication.md) — token, basic, header, query, multi
+- [OAuth2](oauth2.md) — authorization code & client credentials grants, token store
 - [Request body](request-body.md) — JSON, form, multipart, string, stream
 - [Plugins](plugins.md) — `acceptsJson`, `hasTimeout`, `alwaysThrowOnErrors`
 - [Retries, delay & pooling](resilience.md) — `tries`/`withRetry`, `delay`, `pool`

@@ -54,6 +54,14 @@ export interface Response<TDto = unknown> {
    */
   throw(): Response<TDto>;
 
+  /**
+   * Cast this response into its DTO, via the request's `dto` hook (falling back
+   * to the connector's `dto`). Returns `undefined` when neither is defined.
+   */
+  dto(): TDto;
+  /** Like `dto()`, but throws a `RequestError` first when `failed()`. */
+  dtoOrFail(): TDto;
+
   getPendingRequest(): PendingRequest;
   getRequest(): Request;
   getConnector(): Connector;

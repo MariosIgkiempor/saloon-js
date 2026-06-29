@@ -43,6 +43,43 @@ const createUser = (name: string) =>
   });
 ```
 
+## DTOs — typed results
+
+Give `defineRequest` a `TDto` type parameter and a `dto` caster to turn a raw
+response into a typed object. `response.dto()` runs the caster; `dtoOrFail()`
+throws a `RequestError` first if the response `failed()`.
+
+```ts
+import { defineRequest, send, isOk, Method } from 'saloon-js';
+
+interface User { id: string; email: string }
+
+const getUser = (id: string) =>
+  defineRequest<User>({
+    method: Method.GET,
+    endpoint: `/users/${id}`,
+    dto: (res) => {
+      const body = res.json<User>();
+      if (!isOk(body)) throw body.error;
+      return body.value;
+    },
+  });
+
+const res = await send(api, getUser('1'));
+res.dto().email;       // string — typed as User
+res.dtoOrFail().id;    // same, but throws on a 4xx/5xx response
+```
+
+A connector-level `dto` acts as the fallback for any request that doesn't define
+its own:
+
+```ts
+defineConnector({ baseUrl, dto: (res) => /* … */ });
+```
+
+When neither the request nor the connector defines a `dto`, `dto()` returns
+`undefined`.
+
 ## Per-call tweaks
 
 `withX` transformers return a **new** request (the original is untouched) and

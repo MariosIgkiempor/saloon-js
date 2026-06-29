@@ -89,6 +89,14 @@ export async function responseFromFetch(
       if (failed()) throw createRequestError(response);
       return response;
     },
+    dto: () => {
+      const caster = pending.getRequest().dto ?? pending.getConnector().dto;
+      return caster?.(response);
+    },
+    dtoOrFail: () => {
+      if (failed()) throw createRequestError(response);
+      return response.dto();
+    },
     getPendingRequest: () => pending,
     getRequest: (): Request => pending.getRequest(),
     getConnector: (): Connector => pending.getConnector(),

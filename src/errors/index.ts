@@ -1,4 +1,10 @@
 export { FatalRequestError } from '@/errors/FatalRequestError';
+export { InvalidStateError } from '@/errors/oauth/InvalidStateError';
+export { OAuthConfigValidationError } from '@/errors/oauth/OAuthConfigValidationError';
+export {
+  isInvalidStateError,
+  isOAuthConfigValidationError,
+} from '@/errors/oauth/predicates';
 export {
   isClientError,
   isFatalRequestError,
