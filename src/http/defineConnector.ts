@@ -24,6 +24,12 @@ export function defineConnector(config: ConnectorConfig): Connector {
     boot: config.boot,
     handleFetchRequest: config.handleFetchRequest,
     mockClient: config.mockClient,
+    tries: config.tries,
+    retryInterval: config.retryInterval,
+    useExponentialBackoff: config.useExponentialBackoff,
+    throwOnMaxTries: config.throwOnMaxTries,
+    handleRetry: config.handleRetry,
+    delay: config.delay,
     sender: config.sender ?? getDefaultSender(),
     name: config.name,
   };

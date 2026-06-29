@@ -14,6 +14,7 @@ import type {
   QueryConfig,
   QueryValue,
   RequestOptionsConfig,
+  RetryHandler,
 } from '@/contracts/Connector';
 import type { MockClient } from '@/contracts/MockClient';
 import type { Plugin } from '@/contracts/Plugin';
@@ -38,6 +39,14 @@ export interface Request<TDto = unknown> {
   boot?: BootHook;
   handleFetchRequest?: FetchRequestHook;
   mockClient?: MockClient;
+  // Resilience knobs (read by the retry loop in `send`); these override connector.
+  tries?: number;
+  retryInterval?: number;
+  useExponentialBackoff?: boolean;
+  throwOnMaxTries?: boolean;
+  handleRetry?: RetryHandler;
+  // Milliseconds to delay before sending (applied by the delay middleware).
+  delay?: number;
   allowBaseUrlOverride: boolean;
   name?: string;
 }
@@ -57,6 +66,12 @@ export interface RequestConfig<TDto = unknown> {
   boot?: BootHook;
   handleFetchRequest?: FetchRequestHook;
   mockClient?: MockClient;
+  tries?: number;
+  retryInterval?: number;
+  useExponentialBackoff?: boolean;
+  throwOnMaxTries?: boolean;
+  handleRetry?: RetryHandler;
+  delay?: number;
   allowBaseUrlOverride?: boolean;
   name?: string;
 }

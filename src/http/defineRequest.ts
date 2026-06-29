@@ -19,6 +19,12 @@ export function defineRequest<TDto = unknown>(config: RequestConfig<TDto>): Requ
     boot: config.boot,
     handleFetchRequest: config.handleFetchRequest,
     mockClient: config.mockClient,
+    tries: config.tries,
+    retryInterval: config.retryInterval,
+    useExponentialBackoff: config.useExponentialBackoff,
+    throwOnMaxTries: config.throwOnMaxTries,
+    handleRetry: config.handleRetry,
+    delay: config.delay,
     allowBaseUrlOverride: config.allowBaseUrlOverride ?? false,
     name: config.name,
   };

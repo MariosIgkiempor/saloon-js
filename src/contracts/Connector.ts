@@ -28,6 +28,26 @@ export type BootHook = (pending: PendingRequest) => void;
 /** A last hook over the native fetch init; return a replacement or mutate in place. */
 // biome-ignore lint/suspicious/noConfusingVoidType: void lets a hook mutate `init` in place and return nothing.
 export type FetchRequestHook = (init: RequestInit, pending: PendingRequest) => RequestInit | void;
+/**
+ * Per-error retry gate (port of `HasTries::handleRetry`). Returns whether the
+ * given failure should be retried; the connector's and the request's gates must
+ * both allow a retry. Defaults to allowing it.
+ */
+export type RetryHandler = (error: Error) => boolean | Promise<boolean>;
+
+/** Retry/backoff knobs shared by connector + request (request overrides connector). */
+export interface RetryConfig {
+  /** Maximum send attempts (1 = no retries). */
+  tries?: number;
+  /** Milliseconds to wait between attempts (0/undefined = no wait). */
+  retryInterval?: number;
+  /** Double the interval each attempt (`interval`, `interval·2`, `interval·4`, …). */
+  useExponentialBackoff?: boolean;
+  /** When retries are exhausted: throw (default) or return the last failed response. */
+  throwOnMaxTries?: boolean;
+  /** Gate each retry on the failure (default: always retry). */
+  handleRetry?: RetryHandler;
+}
 
 /** The normalized, frozen connector produced by `defineConnector`. */
 export interface Connector {
@@ -45,6 +65,14 @@ export interface Connector {
   handleFetchRequest?: FetchRequestHook;
   // Default mock client for this connector (overridden by per-call/request/global).
   mockClient?: MockClient;
+  // Resilience knobs (read by the retry loop in `send`); request overrides connector.
+  tries?: number;
+  retryInterval?: number;
+  useExponentialBackoff?: boolean;
+  throwOnMaxTries?: boolean;
+  handleRetry?: RetryHandler;
+  // Milliseconds to delay before sending (applied by the delay middleware).
+  delay?: number;
   sender: Sender;
   name?: string;
 }
@@ -62,6 +90,12 @@ export interface ConnectorConfig {
   boot?: BootHook;
   handleFetchRequest?: FetchRequestHook;
   mockClient?: MockClient;
+  tries?: number;
+  retryInterval?: number;
+  useExponentialBackoff?: boolean;
+  throwOnMaxTries?: boolean;
+  handleRetry?: RetryHandler;
+  delay?: number;
   sender?: Sender;
   name?: string;
 }

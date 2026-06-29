@@ -13,6 +13,8 @@ export type {
   QueryConfig,
   QueryValue,
   RequestOptionsConfig,
+  RetryConfig,
+  RetryHandler,
 } from '@/contracts/Connector';
 export type { FakeResponse } from '@/contracts/FakeResponse';
 export type { Fixture } from '@/contracts/Fixture';
