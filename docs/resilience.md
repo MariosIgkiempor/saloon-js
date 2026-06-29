@@ -71,8 +71,8 @@ network), so tests against a [mock client](testing.md) stay instant even when a
 
 ## Pooling
 
-`pool` runs many requests with a bounded number in flight. It is a free function
-returning a controller you configure and then `send()`.
+`pool` runs many requests with a bounded number in flight. It returns a
+controller you configure and then `send()`.
 
 ```ts
 import { pool, defineConnector, defineRequest, Method } from 'saloon-js';

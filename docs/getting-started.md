@@ -23,7 +23,7 @@ const getUser = (id: string) =>
 
 ## 3. Send it
 
-`send` is a free function returning a `Promise<Response>`.
+`send` takes the connector and request and returns a `Promise<Response>`.
 
 ```ts
 import { send } from 'saloon-js';

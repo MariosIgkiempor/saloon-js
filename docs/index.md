@@ -1,9 +1,8 @@
 # saloon-js
 
 Build beautiful API integrations and SDKs. A TypeScript port of
-[SaloonPHP](https://github.com/saloonphp/saloon) with a **functional, class-free
-API**: you describe a *connector* (one per API) and *requests* (one per
-endpoint) as plain config, then call `send()`.
+[SaloonPHP](https://github.com/saloonphp/saloon): you describe a *connector* (one
+per API) and *requests* (one per endpoint) as plain config, then call `send()`.
 
 ```ts
 import { defineConnector, defineRequest, tokenAuth, send, isOk, Method } from 'saloon-js';
@@ -71,10 +70,8 @@ primitives for advanced use and for building your own pieces:
 Types for every config object are exported too (`ConnectorConfig`,
 `RequestConfig`, `Authenticator`, `Plugin`, `Sender`, `MockClient`, …).
 
-## Why functional?
+## Coming from SaloonPHP?
 
-There is no `class extends Connector`. Connectors and requests are values
-produced by `defineConnector` / `defineRequest`; behavior is invoked with free
-functions (`send`, the `withX` transformers, the auth/body factories). Per-call
-overrides *compose* instead of subclassing. Errors are the one carve-out — they
-stay `class extends Error` so they remain throwable.
+There are no base classes to extend: connectors and requests are values from
+`defineConnector` / `defineRequest`, and per-call overrides use the `withX`
+transformers instead of subclassing. See each guide page for the details.
