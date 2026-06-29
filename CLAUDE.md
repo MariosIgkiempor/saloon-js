@@ -19,6 +19,18 @@ A TypeScript port of [SaloonPHP](https://github.com/saloonphp/saloon). The PHP s
 - **Import alias `@/` → `src/`.** Prefer `@/repositories/ArrayStore` over deep relative paths. No file extension needed (`moduleResolution: Bundler`). Wired in `tsconfig.json` (paths), `tsdown.config.ts` (build), and `vitest.config.ts` (tests).
 - **Commit `pnpm-lock.yaml`.** Do not ignore it.
 
+## Documentation
+- **User-facing docs live in `docs/`** — plain Markdown rendered by GitHub Pages
+  (Jekyll, no build step, no deps). Keep it code-example-first and concise.
+- **Keep docs in sync with the public API — every PR.** When a PR changes the
+  public surface (anything exported from `src/index.ts`: new/renamed/removed
+  functions, types, options, or changed behavior), update `docs/` in the **same
+  PR**. The invariant is bidirectional: everything exported is documented, and
+  everything documented is actually implemented (no aspirational/`hallucinated`
+  API — e.g. `dto()`/OAuth stay undocumented until they ship).
+- **Before opening a PR**, cross-check `docs/` against `src/index.ts` and fix any
+  drift. Verify code samples against the real signatures.
+
 ## Common commands
 ```bash
 nvm use                 # match the pinned Node version
