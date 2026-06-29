@@ -44,10 +44,14 @@ defineConnector({ baseUrl, plugins: [withTracing()] });
 For one-off request/response interception without a plugin, use `withMiddleware`:
 
 ```ts
-import { withMiddleware } from 'saloon-js';
+import { withMiddleware, PipeOrder } from 'saloon-js';
 
 const traced = withMiddleware(getUser('1'), (pipeline) => {
   pipeline.onRequest((pending) => { /* inspect/mutate */ });
   pipeline.onResponse((res) => res);
 });
 ```
+
+`onRequest` / `onResponse` / `onFatalException` take an optional name and a
+`PipeOrder` (`First` to prepend, `Last`/default to append) as their 2nd/3rd
+arguments — that's how `alwaysThrowOnErrors` orders its pipe last.

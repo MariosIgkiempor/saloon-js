@@ -46,6 +46,27 @@ Requires Node ≥ 22. ESM-first with a CJS build; ships its own types.
 - [Error handling](error-handling.md) — return-based errors vs. throwing
 - [Testing](testing.md) — mock clients, fake responses, recorded fixtures
 
+## Advanced / low-level exports
+
+Most users only need the surface above. The library also exports lower-level
+primitives for advanced use and for building your own pieces:
+
+- `fetchSender` / `createFetchSender` — the default sender; inject a custom
+  `fetch`. See [Connectors → Custom sender](connectors.md#custom-sender).
+- `ok` / `err` / `isOk` / `isErr` and the `Result` type — the `Result` primitive
+  returned by `response.json()` / `response.toResult()`.
+- `createArrayStore` / `ArrayStore` — the case-folding key/value store backing
+  headers, query, and config (you meet it as `pending.headers`,
+  `response.headers()`, etc.).
+- `createMiddlewarePipeline` — the request/response/fatal pipeline used by
+  [`withMiddleware`](plugins.md#ad-hoc-middleware).
+- `RequestError` / `SaloonError` / `FatalRequestError` classes and
+  `createRequestError` — the throwable error types. See
+  [Error handling](error-handling.md).
+
+Types for every config object are exported too (`ConnectorConfig`,
+`RequestConfig`, `Authenticator`, `Plugin`, `Sender`, `MockClient`, …).
+
 ## Why functional?
 
 There is no `class extends Connector`. Connectors and requests are values

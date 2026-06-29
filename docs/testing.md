@@ -19,7 +19,14 @@ const response = await send(connector, getUser('1'), { mockClient: mock });
 response.isMocked(); // true
 ```
 
-Sequence responses are consumed one per send, in order.
+Sequence responses are consumed one per send, in order. You can also build a
+client incrementally — `addResponse`/`addResponses` are chainable:
+
+```ts
+const mock = createMockClient()
+  .addResponse(mockResponse({ id: '1' }))            // appended to the sequence
+  .addResponse(mockResponse({ who: 'user' }), getUser); // keyed (reusable)
+```
 
 ## Match by name or URL
 
@@ -46,14 +53,30 @@ mockResponse({}, 200).throw(new Error('nope')); // or your own error / (pending,
 
 ## Assertions
 
-```ts
-mock.assertSent(getUser);        // a matching request was sent
-mock.assertNotSent('getOrg');
-mock.assertSentCount(2, getUser);
+A *target* is a request factory, a request/connector `name`, a URL pattern, or a
+predicate `(pending, response) => boolean` (any function taking ≥ 2 arguments).
 
+```ts
+mock.assertSent(getUser);                          // by factory
+mock.assertSent('getUser');                        // by name
+mock.assertSent('https://api.example.com/users/*'); // by URL pattern
+mock.assertSent((pending) => pending.method === 'GET'); // by predicate
+
+mock.assertNotSent('getOrg');
+mock.assertSentCount(2, getUser);   // target optional → counts all
+mock.assertNothingSent();
+mock.assertSentInOrder([getUser, getOrg]);
+```
+
+Inspect recorded round-trips:
+
+```ts
 mock.getLastRequest();
+mock.getLastPendingRequest();
 mock.getLastResponse();
 mock.getRecordedResponses();
+mock.findResponseByRequest(getUser);                       // nth match (default 0)
+mock.findResponseByRequestUrl('https://api.example.com/users/1');
 ```
 
 ## Apply globally
@@ -67,6 +90,9 @@ import { setGlobalMockClient, destroyGlobalMockClient } from 'saloon-js';
 beforeEach(() => setGlobalMockClient(createMockClient([mockResponse({ ok: true })])));
 afterEach(() => destroyGlobalMockClient());
 ```
+
+`getGlobalMockClient()` returns the currently-installed global client (or
+`undefined`).
 
 ## Record real responses as fixtures
 

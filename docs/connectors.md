@@ -36,6 +36,24 @@ defineConnector({
 });
 ```
 
+## Custom sender
+
+By default a connector uses `fetchSender` (the global `fetch`). Override the
+`sender` to inject a custom `fetch` — handy in tests or non-browser runtimes:
+
+```ts
+import { createFetchSender } from 'saloon-js';
+
+defineConnector({
+  baseUrl: 'https://api.example.com',
+  sender: createFetchSender({ fetch: myFetch }),
+});
+```
+
+A sender is any object with a `send(pending)` method, so you can supply your own
+transport entirely. (For faking responses in tests, prefer a
+[mock client](testing.md) over a custom sender.)
+
 ## Precedence
 
 When a value is set in more than one place, the **more specific wins**:
