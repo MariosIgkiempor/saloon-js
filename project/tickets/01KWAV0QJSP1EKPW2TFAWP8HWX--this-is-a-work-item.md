@@ -5,5 +5,12 @@ status: todo
 priority: high
 assignee: MariosIgkiempor
 rank: aaaa
+diagramRefs:
+  -
+    diagramId: 01KWFQBS4KRJDGAM2TX5FAYKHT
+    elementIds:
+      - receive
+      - start
+    label: 'start the process'
 schemaVersion: 1
 ---
