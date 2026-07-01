@@ -1,7 +1,7 @@
 ---
 id: 01KWG1VC62RTVSBQSRM1GGB2NR
 title: 'This is an epic'
-status: backlog
+status: todo
 priority: urgent
 assignee: MariosIgkiempor
 rank: aaaa
