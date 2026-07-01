@@ -7,43 +7,43 @@
             "id": "start",
             "type": "startEvent",
             "label": "Start",
-            "x": 40,
-            "y": 160
+            "x": 20,
+            "y": 21
         },
         {
             "id": "receive",
             "type": "task",
             "label": "Receive request",
-            "x": 180,
-            "y": 140
+            "x": 186,
+            "y": -59
         },
         {
             "id": "decide",
             "type": "gateway",
             "label": "Approved?",
             "x": 400,
-            "y": 150
+            "y": -62
         },
         {
             "id": "approve",
             "type": "task",
             "label": "Fulfil request",
             "x": 580,
-            "y": 60
+            "y": -110
         },
         {
             "id": "reject",
             "type": "task",
             "label": "Notify rejection",
-            "x": 580,
-            "y": 240
+            "x": 573,
+            "y": 2
         },
         {
             "id": "end",
             "type": "endEvent",
             "label": "Done",
-            "x": 800,
-            "y": 160
+            "x": 799,
+            "y": 33
         }
     ],
     "flows": [
